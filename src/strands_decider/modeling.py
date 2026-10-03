@@ -28,6 +28,8 @@ import torch.nn.functional as F
 from huggingface_hub import snapshot_download
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 
+from .data.collate import POINTER_HEADS
+
 # Slots the head can address. This must match the largest option count the corpus
 # actually contains: slots beyond that never receive a gradient and would ship at
 # their random initialisation. `strands-decider data build --max-options 24` is the matching
@@ -60,7 +62,9 @@ class StrandsDeciderConfig:
     # untouched torso's own reading of the option-number tokens.
     kl_frozen_weight: float = 0.0
     # "slot" = Linear(hidden, num_slots), the v1-v6 readout. "pointer" scores each
-    # option from its own hidden state; see PointerHead. Defaults to "slot" so every
+    # option from its own hidden state; see PointerHead. "xpointer" is the pointer with
+    # separate query and key norms, for an encoder-decoder torso whose query and keys
+    # come from different stacks; see CrossPointerHead. Defaults to "slot" so every
     # existing checkpoint keeps loading unchanged.
     head_type: str = "slot"
     pointer_dim: int = 256
@@ -155,6 +159,27 @@ class PointerHead(nn.Module):
         return (o @ d).squeeze(-1) * self.scale
 
 
+class CrossPointerHead(PointerHead):
+    """PointerHead with one norm for the query and another for the keys.
+
+    On an encoder-decoder torso the query is the decoder's first position and the keys
+    are encoder states, the outputs of two stacks with their own final norms and their
+    own outlier dimensions (encoder states reach |h| ~ 1000 on T5Gemma 2). One shared
+    LayerNorm would have to fit both distributions; two cost 2*hidden more parameters.
+    """
+
+    def __init__(self, hidden_size: int, dim: int = 256, dropout: float = 0.0):
+        super().__init__(hidden_size, dim=dim, dropout=dropout)
+        del self.norm
+        self.norm_q = nn.LayerNorm(hidden_size)
+        self.norm_k = nn.LayerNorm(hidden_size)
+
+    def forward(self, decide: torch.Tensor, options: torch.Tensor) -> torch.Tensor:
+        d = self.q(self.dropout(self.norm_q(decide))).unsqueeze(-1)  # [B, dim, 1]
+        o = self.k(self.dropout(self.norm_k(options)))              # [B, K, dim]
+        return (o @ d).squeeze(-1) * self.scale
+
+
 def build_head(config: StrandsDeciderConfig, hidden_size: int) -> nn.Module:
     """The readout named by `config.head_type`, in fp32 either way.
 
@@ -165,6 +190,8 @@ def build_head(config: StrandsDeciderConfig, hidden_size: int) -> nn.Module:
         head: nn.Module = PointerHead(
             hidden_size, dim=config.pointer_dim, dropout=config.head_dropout
         )
+    elif config.head_type == "xpointer":
+        head = CrossPointerHead(hidden_size, dim=config.pointer_dim, dropout=config.head_dropout)
     elif config.head_type == "slot":
         head = SlotHead(
             hidden_size,
@@ -248,6 +275,9 @@ class StrandsDeciderModel(nn.Module):
     @staticmethod
     def hidden_size(torso: nn.Module) -> int:
         cfg = getattr(torso, "config", None)
+        if cfg is not None and getattr(cfg, "is_encoder_decoder", False):
+            # The head reads both stacks; T5Gemma 2's config refuses unequal widths.
+            return int(cfg.decoder.hidden_size)
         for attr in ("hidden_size", "n_embd", "d_model"):
             if cfg is not None and getattr(cfg, attr, None):
                 return int(getattr(cfg, attr))
@@ -295,10 +325,53 @@ class StrandsDeciderModel(nn.Module):
                 config.base_model, config=base_cfg.get_text_config(), **kwargs
             )
             torso = lm.model
+        elif base_cfg.model_type == "t5gemma2":
+            # Encoder and decoder, no LM head (it is tied to the shared input embedding,
+            # which the frozen readout reads instead). The checkpoint is multimodal: drop
+            # the vision tower and its projector, 418M parameters the text path never
+            # calls. Dropping them before LoRA attaches matters too: SigLIP's attention
+            # projections are also named q_proj/k_proj/v_proj, so a target list of bare
+            # names would otherwise put adapters on them.
+            import transformers
+
+            torso = transformers.T5Gemma2Model.from_pretrained(config.base_model, **kwargs)
+            del torso.encoder.vision_tower, torso.encoder.multi_modal_projector
+            # Loading with dtype=float32 leaves a bf16 tensor on the decoder path in
+            # transformers 5.17 (a mixed-dtype matmul fails); a cast after loading does not.
+            torso.to(getattr(torch, config.torch_dtype))
+            return torso
         else:
             torso = AutoModel.from_pretrained(config.base_model, **kwargs)
         torso.config.use_cache = True
         return torso
+
+    @staticmethod
+    def is_encoder_decoder(torso: nn.Module) -> bool:
+        """True for an encoder-decoder torso (T5Gemma 2): the prompt goes through the
+        encoder, and the decoder's first position, fed only the start token, is the
+        query. See docs/bidi-design.md."""
+        return bool(getattr(getattr(torso, "config", None), "is_encoder_decoder", False))
+
+    def compile_layers(self) -> int:
+        """`torch.compile` each transformer layer of the torso, in place.
+
+        Speed only. A LoRA-wrapped layer launches hundreds of small kernels (adapter
+        dropout, dtype casts, norms) and with gradient checkpointing launches them twice;
+        on T5Gemma 2 at 8 x 256 tokens that made a step CPU-bound, 1.04 s against 0.48 s of
+        GPU work. Compiling per layer fuses them: 0.51 s. `dynamic=True` compiles once for
+        every sequence length the length-grouped sampler produces.
+        """
+        from transformers.modeling_layers import GradientCheckpointingLayer
+
+        # train and eval modes compile separately; the default limit (8) is close for 52 layers
+        dynamo = torch._dynamo  # noqa: SLF001
+        dynamo.config.cache_size_limit = max(dynamo.config.cache_size_limit, 64)
+        n = 0
+        for module in self.torso.modules():
+            if isinstance(module, GradientCheckpointingLayer):
+                module.compile(dynamic=True)
+                n += 1
+        return n
 
     @staticmethod
     def is_hybrid(torso: nn.Module) -> bool:
@@ -348,6 +421,41 @@ class StrandsDeciderModel(nn.Module):
         )
         return out.last_hidden_state
 
+    def decoder_start_id(self) -> int:
+        cfg: Any = getattr(self.torso, "config", None)
+        start = getattr(cfg.decoder, "decoder_start_token_id", None)
+        return int(start if start is not None else cfg.decoder.bos_token_id)
+
+    def readout_states(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        past_key_values: Any = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """(states the option keys are gathered from, the query), the query in fp32.
+
+        Causal torso: the last-layer states, and the state at the last real token
+        (`<answer>`). Encoder-decoder torso: the encoder's states over the whole prompt,
+        and the decoder's state at its one position, fed the start token. That position
+        has cross-attended to every encoder state, and its LM logits would be the
+        pretrained model's own answer. Right padding is exact for the encoder: padded
+        keys are masked, so real tokens' states do not move (docs/bidi-design.md, Phase 0).
+        """
+        if not self.is_encoder_decoder(self.torso):
+            hidden = self.encode(input_ids, attention_mask, past_key_values=past_key_values)
+            return hidden, pool_last_token(hidden, attention_mask).to(torch.float32)
+        if past_key_values is not None:
+            raise ValueError("an encoder-decoder torso has no shared-prefix cache")
+        start = torch.full((input_ids.size(0), 1), self.decoder_start_id(),
+                           dtype=input_ids.dtype, device=input_ids.device)
+        out = self.torso(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=start,
+            use_cache=False,
+            return_dict=True,
+        )
+        return out.encoder_last_hidden_state, out.last_hidden_state[:, -1].to(torch.float32)
 
     # ---- pretrained-readout hooks ------------------------------------------
     def slot_token_ids(self) -> dict[int, int]:
@@ -422,10 +530,14 @@ class StrandsDeciderModel(nn.Module):
             disable = getattr(self.torso, "disable_adapter", None)
             ctx = disable() if callable(disable) else contextlib.nullcontext()
             with ctx:
-                hidden = self.encode(input_ids, attention_mask)
-            pooled = pool_last_token(hidden, attention_mask).to(torch.float32)
+                _, pooled = self.readout_states(input_ids, attention_mask)
             rows = table[[slots[k] for k in sorted(slots)]].to(torch.float32)
             logits = pooled @ rows.t()
+            # Gemma-family LMs may cap their logits; the pretrained readout is the capped one.
+            cfg: Any = getattr(self.torso, "config", None)
+            cap = getattr(getattr(cfg, "decoder", cfg), "final_logit_softcapping", None)
+            if cap:
+                logits = torch.tanh(logits / cap) * cap
             pad = self.config.num_slots - logits.size(-1)
             if pad > 0:
                 logits = F.pad(logits, (0, pad), value=MASK_VALUE)
@@ -443,9 +555,8 @@ class StrandsDeciderModel(nn.Module):
         temperature: Any | None = None,
         opt_idx: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
-        hidden = self.encode(input_ids, attention_mask, past_key_values=past_key_values)
-        pooled = pool_last_token(hidden, attention_mask).to(torch.float32)
-        if self.config.head_type == "pointer":
+        hidden, pooled = self.readout_states(input_ids, attention_mask, past_key_values)
+        if self.config.head_type in POINTER_HEADS:
             if opt_idx is None:
                 raise ValueError("pointer head needs opt_idx (option token positions)")
             # Indices are relative to what was actually forwarded, so with a shared

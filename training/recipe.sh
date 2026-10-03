@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# hobson-bidi: `all` runs the fork's recipe, b1 (configs/train-bidi.yaml, a T5Gemma 2 torso
+# on g4's rows and targets; docs/bidi-design.md):
+#
+#   corpus      copy the built corpora and eval sets from $CORPUS_SRC (default
+#               ~/hobson-gemma4/data), where g4's teacher labels were made. Labels attach
+#               to rows by position, and that train_v5 build differs from a fresh `build`
+#               (data/SHA256SUMS records the local one), so the corpus is copied, never rebuilt.
+#   teacher31b  gemma-4-31B-it's committed distributions (data/synthetic/teacher_gemma4-31b-it_*)
+#               and v14's replay merged into data/teacher_g4.jsonl (scripts/merge_teacher_g4.py)
+#   train, calibrate, eval   as below
+#
+# Every v19 stage below is unchanged and still runs by name.
+#
 # The v19 recipe, end to end -- the reference recipe. Run it under WSL2 (see
 # training/README.md#setup): the Qwen3.5 torso's fused kernels need Linux.
 #
@@ -47,12 +60,13 @@
 # replace the two training configs.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."  # every path below is relative to the repo root
-CKPT="${CKPT:-checkpoints/hobson-2b-recipe}"
+CKPT="${CKPT:-checkpoints/bidi-recipe}"
 export PY="${PY:-python}"  # the active environment; the AWS runner sets PY explicitly
 export PYTHONUNBUFFERED=1 HF_HUB_DISABLE_PROGRESS_BARS=1
 NGPU="${NGPU:-1}"
 PARENT_CONFIG="${PARENT_CONFIG:-configs/train-parent.yaml}"
-TRAIN_CONFIG="${TRAIN_CONFIG:-configs/train.yaml}"
+TRAIN_CONFIG="${TRAIN_CONFIG:-configs/train-bidi.yaml}"
+CORPUS_SRC="${CORPUS_SRC:-$HOME/hobson-gemma4/data}"
 strands-decider() { "$PY" -u -m strands_decider.cli "$@"; }
 
 # label MODULE ARGS...: one process, or with NGPU > 1 one shard per GPU and then --merge.
@@ -90,6 +104,35 @@ verify() {
 }
 
 build() { bash training/recipe_v7.sh build; }
+
+# The six training files, the held-out and evaluation sets, as g4 trained and measured on them.
+CORPUS_FILES="train_v5 multistep_v14 generated_v16 generated_v18 adequacy_hs2 adequacy_gen
+  holdout_v5_norule multistep_v14_eval generated_v16_eval generated_v18_eval adequacy_hs2_eval
+  adequacy_gen_eval catchall_v20_eval flips_v20_eval para_pairs_v16_eval para_pairs_v18_eval"
+corpus() {
+  local f
+  mkdir -p data
+  for f in $CORPUS_FILES; do cp "$CORPUS_SRC/$f.jsonl" "data/$f.jsonl"; done
+  verify data/train_v5.jsonl data/multistep_v14.jsonl data/generated_v16.jsonl data/generated_v18.jsonl \
+    data/adequacy_hs2.jsonl data/adequacy_gen.jsonl data/holdout_v5_norule.jsonl data/multistep_v14_eval.jsonl
+}
+
+# g4's teacher file, from the committed labels: no 31B model is run. They were made in the
+# hobson-gemma4 fork by `python -m hobson.data.teacher --src data/<file>.jsonl --out
+# data/teacher31b/<file>.jsonl --model google/gemma-4-31B-it --revision
+# 842da3794eaa0b77d5f08bae87a17459d91ff475 --max-batch-tokens 16000`.
+teacher31b() {
+  local f
+  verify data/train_v5.jsonl data/multistep_v14.jsonl data/generated_v16.jsonl data/generated_v18.jsonl \
+    data/adequacy_hs2.jsonl data/adequacy_gen.jsonl
+  mkdir -p data/teacher31b
+  cp data/synthetic/replay_v14_multistep.jsonl data/
+  for f in train_v5 generated_v16 generated_v18 adequacy_hs2 adequacy_gen; do
+    cp "data/synthetic/teacher_gemma4-31b-it_$f.jsonl" "data/teacher31b/$f.jsonl"
+  done
+  "$PY" scripts/merge_teacher_g4.py --labels-dir data/teacher31b --out data/teacher_g4.jsonl
+  verify data/teacher_g4.jsonl
+}
 
 # download FILE URL: get URL into FILE, unless FILE exists. curl fails on an HTTP error and
 # writes to FILE.part. Only a complete download becomes FILE, so a rerun never keeps a failed
@@ -214,9 +257,10 @@ evaluate() {
 [ $# -gt 0 ] || set -- all
 for STEP in "$@"; do
   case "$STEP" in
-    build|fetch|multistep|generated|adequacy|catchall|teacher|distill|parent|replay|train|calibrate) "$STEP" ;;
+    corpus|teacher31b|build|fetch|multistep|generated|adequacy|catchall|teacher|distill|parent|replay|train|calibrate) "$STEP" ;;
     eval) evaluate ;;
-    all) build; fetch; multistep; generated; adequacy; teacher; parent; replay; train; calibrate; evaluate ;;
+    all) corpus; teacher31b; train; calibrate; evaluate ;;
+    all-v19) TRAIN_CONFIG=configs/train.yaml; build; fetch; multistep; generated; adequacy; teacher; parent; replay; train; calibrate; evaluate ;;
     *) echo "unknown step: $STEP" >&2; exit 2 ;;
   esac
 done

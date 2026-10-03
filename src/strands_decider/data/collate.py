@@ -19,6 +19,10 @@ import torch
 from ..prompting import build_prompt
 from .format import Example
 
+# Readouts that score each option from its own token: they need option positions
+# (`opt_idx`) and have no slot ceiling. See modeling.PointerHead and CrossPointerHead.
+POINTER_HEADS = ("pointer", "xpointer")
+
 
 @dataclass
 class CollatorConfig:
@@ -167,7 +171,7 @@ class SystemOneCollator:
         weights: list[float] = []
         teachers: list[list[float] | None] = []
 
-        pointer = self.cfg.head_type == "pointer"
+        pointer = self.cfg.head_type in POINTER_HEADS
         spans: list[Any] = []
         for ex in batch:
             # A pointer head has no fixed slot count, so only the slot head caps options.

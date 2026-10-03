@@ -56,6 +56,13 @@ def test_v19_seed1_is_v19_except_seed_and_output_dir():
     assert _differing_keys(seed1, v19) == {"seed", "output_dir"}
 
 
+def test_train_bidi_yaml_is_b1_except_output_dir():
+    bidi, b1 = _load("configs", "train-bidi.yaml"), _load("configs", "experiments", "b1.yaml")
+    assert _differing_keys(bidi, b1) == {"output_dir"}
+    # The file that `training/recipe.sh teacher31b` writes and checks against data/SHA256SUMS.
+    assert b1["teacher_file"] == "data/teacher_g4.jsonl"
+
+
 def test_v19_saved_configs_load():
     StrandsDeciderConfig.from_json(os.path.join(FIXTURE, "hobson_config.json"))
     saved = dataclasses.asdict(TrainConfig.from_yaml(os.path.join(FIXTURE, "train_config.json")))

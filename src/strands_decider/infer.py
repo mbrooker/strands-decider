@@ -27,6 +27,7 @@ from typing import Any
 
 import torch
 
+from .data.collate import POINTER_HEADS
 from .modeling import StrandsDeciderModel, apply_temperature, masked_log_softmax, pool_last_token
 from .prompting import (
     RenderedQuestion,
@@ -139,6 +140,13 @@ class SystemOneEngine:
             self._upcast_torso_for_cpu()
         self.tok = model.tokenizer
         self.device = self.cfg.device
+        if self.cfg.use_prefix_cache and StrandsDeciderModel.is_encoder_decoder(model.torso):
+            # A bidirectional encoder reads the state differently for each question, so
+            # a state encoded once is not what training saw: every question re-encodes
+            # it, batched (docs/bidi-design.md#inference).
+            print("[strands-decider] encoder-decoder torso: no shared-prefix cache; "
+                  "questions are encoded with the state, batched")
+            self.cfg = replace(self.cfg, use_prefix_cache=False)
 
     def _upcast_torso_for_cpu(self) -> None:
         """Run a half-precision torso in fp32 on CPU.
@@ -261,9 +269,9 @@ class SystemOneEngine:
         s, q = self._fit(state_text, question_texts)
         ids, mask = self._pad([s + qi for qi in q])
         # This path forwards the whole prompt, so option positions sit after the state.
-        assert rendered is not None or self.model.config.head_type != "pointer"
+        assert rendered is not None or self.model.config.head_type not in POINTER_HEADS
         opt_idx = (self._option_idx(rendered, len(s))  # type: ignore[arg-type]
-                   if self.model.config.head_type == "pointer" else None)
+                   if self.model.config.head_type in POINTER_HEADS else None)
         out = self.model(
             input_ids=ids,
             attention_mask=mask,
@@ -316,7 +324,7 @@ class SystemOneEngine:
         # last real *suffix* token -- which is `<answer>`, the position that has
         # attended to state and question alike.
         pooled = pool_last_token(hidden, full_mask).to(torch.float32)
-        if self.model.config.head_type == "pointer":
+        if self.model.config.head_type in POINTER_HEADS:
             # `hidden` is the suffix only, so option positions are suffix-relative and
             # need no prefix offset -- the cached state never enters the gather.
             from .modeling import gather_options
@@ -343,7 +351,7 @@ class SystemOneEngine:
             # A pointer head scores each option from its own hidden state, so there is
             # no slot count to exceed; only the fixed-width readout has a ceiling.
             if (
-                self.model.config.head_type != "pointer"
+                self.model.config.head_type not in POINTER_HEADS
                 and rq.n_slots > self.model.config.num_slots
             ):
                 raise ValueError(
@@ -510,6 +518,14 @@ def load_mlx(checkpoint: str, config: EngineConfig | None = None) -> SystemOneEn
         raise RuntimeError(
             "device 'mlx' needs Apple silicon and the mlx extra: pip install 'strands-decider[mlx]'"
         )
+    from transformers import AutoConfig
+
+    from .modeling import StrandsDeciderConfig, checkpoint_dir, config_path
+
+    base = StrandsDeciderConfig.from_json(config_path(checkpoint_dir(checkpoint))).base_model
+    if getattr(AutoConfig.from_pretrained(base), "is_encoder_decoder", False):
+        raise RuntimeError(f"device 'mlx' does not support {base}: mlx-lm has no "
+                           "encoder-decoder models; use --device mps or cpu")
     from .mlx_engine import load_mlx_engine
 
     return load_mlx_engine(checkpoint, config)

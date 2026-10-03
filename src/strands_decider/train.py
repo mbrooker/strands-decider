@@ -95,6 +95,9 @@ class TrainConfig:
     warmup_ratio: float = 0.03
     max_grad_norm: float = 1.0
     gradient_checkpointing: bool = True
+    # Speed only: torch.compile each torso layer (StrandsDeciderModel.compile_layers).
+    # Off by default so every saved train_config.json still reproduces its run.
+    compile_layers: bool = False
 
     # data augmentation
     shuffle_options: bool = True
@@ -339,6 +342,8 @@ def train(cfg: TrainConfig) -> str:
                 gradient_checkpointing_kwargs={"use_reentrant": False}
             )
     model.to(device)
+    if cfg.compile_layers:
+        print(f"[strands-decider] compiled {model.compile_layers()} torso layers")
     fwd = distributed.wrap(model, cfg.seed)
 
     trainable, total = model.trainable_parameters()

@@ -15,9 +15,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Entries for files that are not committed, and the recipe.sh stage that writes each one.
 PRODUCED = {
-    "data/train_v5.jsonl": "build",
+    # hobson-bidi: the local build, copied from the hobson-gemma4 fork, where g4's teacher
+    # labels were made against it. train_v5 and holdout_v5_norule differ from a fresh build.
+    "data/train_v5.jsonl": "corpus",
+    "data/holdout_v5_norule.jsonl": "corpus",
+    "data/generated_v16.jsonl": "corpus",
+    "data/generated_v18.jsonl": "corpus",
+    "data/adequacy_hs2.jsonl": "corpus",
+    "data/adequacy_gen.jsonl": "corpus",
+    "data/teacher_g4.jsonl": "teacher31b",
     "data/train_v5.holdout.jsonl": "build",
-    "data/holdout_v5_norule.jsonl": "build",
     "data/multistep_v14.jsonl": "multistep",
     "data/multistep_v14_eval.jsonl": "multistep",
     "data/raw/contract-nli.zip": "fetch",
