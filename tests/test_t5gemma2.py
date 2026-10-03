@@ -165,6 +165,12 @@ def test_engine_batches_questions_without_a_prefix_cache(base_dir):
         for key in ("noul", "score", "confidence"):
             if key in a:
                 assert a[key] == pytest.approx(b[key], abs=2e-4)
+    # evaluation/bench_local.py swaps `cfg` after construction to time each path; the
+    # torso must still never reach the shared-prefix path.
+    from dataclasses import replace
+
+    eng.cfg = replace(eng.cfg, use_prefix_cache=True)
+    assert eng.ask(state, qs).answers == together
 
 
 def test_checkpoint_round_trip(base_dir, tmp_path):

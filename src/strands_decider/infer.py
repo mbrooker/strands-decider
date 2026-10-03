@@ -140,7 +140,9 @@ class SystemOneEngine:
             self._upcast_torso_for_cpu()
         self.tok = model.tokenizer
         self.device = self.cfg.device
-        if self.cfg.use_prefix_cache and StrandsDeciderModel.is_encoder_decoder(model.torso):
+        # Checked per request too (`evaluate`): callers replace `cfg` after construction.
+        self._encoder_decoder = StrandsDeciderModel.is_encoder_decoder(model.torso)
+        if self.cfg.use_prefix_cache and self._encoder_decoder:
             # A bidirectional encoder reads the state differently for each question, so
             # a state encoded once is not what training saw: every question re-encodes
             # it, batched (docs/bidi-design.md#inference).
@@ -377,7 +379,7 @@ class SystemOneEngine:
             # One question gains nothing from a shared prefix and pays a second forward:
             # measured on JevBench (one question per task), p50 0.111 s batched, 0.204 s
             # through the prefix path, with the same answers.
-            if self.cfg.use_prefix_cache and len(chunk_rendered) > 1:
+            if self.cfg.use_prefix_cache and len(chunk_rendered) > 1 and not self._encoder_decoder:
                 try:
                     probs, ntok = self._slot_probs_shared_prefix(
                         state_text, [rq.text for rq in chunk_rendered], chunk_slots,
