@@ -140,4 +140,16 @@ schedule compressed into 40 steps), then the checkpoint through `strands-decider
   40 steps the head still reads rubric position, not rubric text. Generated adequacy
   0.460. These are plumbing checks, not results.
 
+## Restart (added before the run that counts)
+
+The first launch, at `f359286`, was stopped by hand at step 40 of 3,738. Windows reported
+22.4 GB of GPU memory held by the WSL VM against torch's 15.4 GiB peak, with the
+compositor holding 9.2 GB more. Copy traffic appeared, and the log stalled at step 40:
+the caching allocator, fragmented by varying batch shapes, had spilled past the card
+into system memory, which WSL2 does silently. No weights from it are used. The run is
+relaunched from scratch with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, now the
+default in `strands_decider.cli` and `training/recipe.sh`. On this card it brings memory
+reserved down to the allocation peak (3.38 against 4.64 GiB on a mixed-size test). This
+changes memory placement only, not the computation, so nothing above changes.
+
 ## Outcome (added after the run)

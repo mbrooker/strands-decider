@@ -63,6 +63,9 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."  # every path below is relative to the re
 CKPT="${CKPT:-checkpoints/bidi-recipe}"
 export PY="${PY:-python}"  # the active environment; the AWS runner sets PY explicitly
 export PYTHONUNBUFFERED=1 HF_HUB_DISABLE_PROGRESS_BARS=1
+# For the evaluation scripts too, which do not go through strands_decider.cli (where the
+# same default is set): fragmentation spills to system memory under WSL2 (cli.py).
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 NGPU="${NGPU:-1}"
 PARENT_CONFIG="${PARENT_CONFIG:-configs/train-parent.yaml}"
 TRAIN_CONFIG="${TRAIN_CONFIG:-configs/train-bidi.yaml}"

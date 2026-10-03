@@ -48,6 +48,20 @@ minutes. On Windows' fallback kernels the same labelling spilled past the 24 GiB
 slowed to a crawl: the labeller writes each row as it goes and resumes, and its default
 batch budget is 4,000 tokens for that reason.
 
+## Allocator fragmentation under WSL2 (hobson-bidi)
+
+Length-grouped batches change shape every step, and torch's default caching allocator
+fragments under that. On the T5Gemma 2 torso (b1) it reserved 22.4 GB for a 15.4 GiB
+allocation peak. With the Windows compositor holding 9.2 GB more, that went past the
+card, and under WSL2 the overflow spills to system memory over PCIe rather than
+failing. The run stalled at step 40 with copy traffic visible, while still appearing to
+work. `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` reserves close to the peak
+(3.38 against 4.64 GiB on a mixed-size test) and works under WSL2. It is the default in
+`strands_decider.cli` and `training/recipe.sh`, and an explicit setting overrides it.
+Windows' per-process figure is the "Dedicated GPU memory" column in Task Manager's
+Details tab; the WSL VM shows there as `vmwp`. `nvidia-smi` cannot attribute GPU use to
+WSL processes.
+
 ## Length-grouped batching
 
 The collator pads each micro-batch to its longest row, so one long document among

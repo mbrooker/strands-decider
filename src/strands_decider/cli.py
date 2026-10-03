@@ -23,6 +23,13 @@ from .data.format import Example, read_jsonl, write_jsonl
 from .prompting import build_prompt
 from .schema import ChoiceQuestion, NoulQuestion, Question, ScoreQuestion
 
+# Before the first CUDA allocation, which is when the allocator reads it; an explicit
+# setting wins. Length-grouped batches vary in shape every step, and the default
+# allocator fragments under that: on b1 it reserved 22.4 GB for a 15.4 GiB peak, and under
+# WSL2 the excess spills to system memory over PCIe instead of failing, so training
+# stalls (training/hardware.md). Expandable segments reserve close to the peak.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 app = typer.Typer(
     name="strands-decider",
     help="A System One model: typed, calibrated answers instead of text.",
