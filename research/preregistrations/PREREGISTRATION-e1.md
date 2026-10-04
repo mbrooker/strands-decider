@@ -131,4 +131,91 @@ cache. Pinned by `tests/test_t5gemma_encoder.py`; the full suite passes (265).
 
 ## Outcome: e1a (added after the run)
 
+Nothing above this section was edited after e1a trained. **By the rule fixed above, e1a does
+not become hobson-bidi's reference.** Predictions 1 (JevBench) and 4 (JevBench calibration)
+failed. Predictions 2, 3 and 5 held. The named failure, "JevBench under 153", is not met:
+e1a scored exactly 153.
+
+The run: commit `3f09448`, RTX 3090 under WSL2, 4 October 2026. Training took 5 h 13 m
+(03:41 to 08:54 UTC), 3,738 steps at 0.21 to 0.22 steps/s. Peak allocation 15.6 GiB, at
+most 18.3 GB in use on the card, no spill. Final validation loss / accuracy 0.393 / 0.820:
+the lowest loss in the series (b1 0.407, g4 0.427, v19 0.421). Calibration temperatures:
+choice 1.192, yes/no 1.328, score 0.911. Outputs are in `~/hobson-bidi/reports/e1a/`.
+
+| | prediction | v19 | b1 | e1a | |
+| --- | --- | --- | --- | --- | --- |
+| 1 | JevBench >= 168 | 168 | 153 | **153** | FAIL |
+| 2 | nine sets within 0.02 of v19 | | six below | **all nine held, most above v19** | pass |
+| 3 | order TV <= 0.044, flips < 0.156 | 0.088 / 0.156 | 0.035 / 0.052 | 0.038 / 0.055 | pass |
+| 4 | JevBench ECE <= 0.07; held-out ECE <= 0.074 | 0.051; 0.054 | 0.044; 0.065 | **0.100**; 0.057 | FAIL |
+| 5 | JevBench p50 <= 150 ms, p95 <= 600 ms | 115 / 299 | 216 / 348 | **80** / 348 | pass |
+
+**Sets** (floor in brackets; v19 from its rerun on this card):
+
+| set | v19 | b1 | e1a | |
+| --- | --- | --- | --- | --- |
+| held-out short tasks [0.627] | 0.647 | 0.671 | **0.695** (ECE 0.057) | pass |
+| MuSiQue [0.862] | 0.882 | 0.923 | **0.948** | pass |
+| ContractNLI [0.853] | 0.873 | 0.843 | 0.864 | pass |
+| BoardgameQA [0.800] | 0.820 | 0.748 | **0.884** | pass |
+| HotpotQA, held out [0.699] | 0.719 | 0.605 | **0.748** | pass |
+| generated, v16's [0.837] | 0.857 | 0.797 | 0.851 | pass |
+| generated, v18's [0.757] | 0.777 | 0.741 | 0.786 | pass |
+| adequacy, HelpSteer2 [0.702] | 0.722 | 0.590 | **0.761** | pass |
+| adequacy, generated, balanced [0.768] | 0.788 | 0.693 | **0.821** | pass |
+
+b1's adequacy failure is gone. Adequate answers are recognised at 0.718 on HelpSteer2
+(b1 0.444, v19 0.684) and 0.802 on the generated set (b1 0.562, v19 0.719).
+
+**JevBench: 153/231** (easy 48, standard 59, hard 46). Paired against v19's recorded run
+(167): 11 gained, 25 lost, p = 0.029. Brier 0.373 (v19 0.342, b1 0.411), ECE 0.100,
+paraphrase consistency 0.972, the highest recorded. Families at 1.0: fact, intent,
+ordinal, routing, routing_hard, tool_selection; extraction 0.958. The weakest:
+temporal_numeric 0.133, long_policy 0.211, probability 0.30, multi_hop 0.389.
+
+**External benchmarks** (exploratory; b1 measured with the same scripts):
+
+| | v19 | g4 | b1 | e1a |
+| --- | --- | --- | --- | --- |
+| JF100 (300) | 162 | 172 | 135 | 158 |
+| Typed Decisions: accuracy / KL | 0.614 / | 0.669 / 0.262 | 0.487 / 0.363 | 0.525 / 0.309 |
+
+**Latency** (`bench_local`, engine end to end, median): one question at 256 / 1,024 /
+2,048 / 4,000 tokens: 74 / 136 / 260 / 516 ms (b1 197 / 207 / 271 / 406; v19 102 / 133 /
+209 / 395). Eight questions on a 4,000-token state: 3,803 ms (b1 2,317, v19 500 with its
+cache). Short requests are faster than v19's. Long and multi-question requests are the
+slowest in the series, which is e1b's target.
+
+**Diagnostics (exploratory, after the predictions were scored).**
+`research/scripts/b1_by_length.py` and `research/scripts/jevbench_by_length.py`:
+
+- *The eval sets gain at every length.* Multi-step by prompt-length quartile against v19:
+  +0.061, +0.019, +0.040, +0.031.
+- *JevBench's loss is mostly short tasks.* Bucketed by e1a's token counts:
+
+  | input tokens | n | v19 | b1 | e1a |
+  | --- | --- | --- | --- | --- |
+  | under 500 | 166 | 0.861 | 0.771 | 0.795 |
+  | 500 to 1,500 | 28 | 0.321 | 0.321 | 0.357 |
+  | 1,500 to 3,000 | 29 | 0.414 | 0.414 | 0.345 |
+  | 3,000 and over | 8 | 0.375 | 0.500 | 0.125 |
+
+  About 11 of the 14 tasks e1a is behind v19 are under 500 tokens, in judgement families
+  (judge_hard, temporal_numeric). long_policy, 2,296 to 3,874 tokens, adds 3 against v19
+  and 6 against b1 (v19 7 of 19, b1 10, e1a 4).
+
+**Reading.** On everything drawn from the training families, e1a is the strongest model
+in the series: every set at or above v19, most well above, the held-out tasks the best
+recorded, and b1's adequacy failure repaired. Short requests are the fastest yet. On
+JevBench, an external benchmark of judgements phrased unlike the training rows, it lands
+exactly where b1 did, below v19, and its calibration there is the worst of the three
+(ECE 0.100 against 0.057 on held-out tasks). JF100 and Typed Decisions, also external,
+show the same: e1a well above b1, below v19 and g4. Two different bidirectional torsos now
+improve the in-distribution sets and stop at 153 on JevBench. The pattern points at
+something they share: transfer out of the training distribution, with the
+instruction-tuned decoders of v19 and g4 generalising further. Torso size alone does not
+explain it. Encoder Phase 0's reasoning slices were drawn from the training families, so,
+like b1's probe, it could not see this. A probe that predicts JevBench needs out-of-
+distribution items: JevBench's own, JF100 or Typed Decisions.
+
 ## Outcome: e1b (added after the run)
