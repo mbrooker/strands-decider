@@ -10,6 +10,7 @@
 #   JEVBENCH_DIR     where JevBench is cloned                       (default $HOME/jevbench)
 #   JEVBENCH_COMMIT  pinned JevBench commit                         (default 1bcc55e...)
 #   EXPECT_MAX_LENGTH  window /health must report     (default: the checkpoint's own)
+#   SERVE_ARGS       extra `serve` flags, e.g. --compile             (default none)
 #   MODEL_LABEL      --model / --run-label passed to JevBench       (default basename of ckpt)
 #   HEALTH_TIMEOUT_S seconds to wait for /health                    (default 1200)
 #   baseline_run     a run in research/data/jevbench_results.csv (e.g. v17); if given,
@@ -95,8 +96,10 @@ TASKS_SHA=$(sha256sum "$TASKS" | cut -d' ' -f1)
 if curl -s -m 3 -o /dev/null "$URL/health"; then
   die "something already answers on $URL; refusing to measure a stale server"
 fi
-log "serving $CKPT on GPU $GPU port $PORT"
-CUDA_VISIBLE_DEVICES=$GPU nohup "$HOBSON" serve "$CKPT" --host 127.0.0.1 --port "$PORT" \
+SERVE_ARGS=${SERVE_ARGS:-}
+log "serving $CKPT on GPU $GPU port $PORT ${SERVE_ARGS}"
+# shellcheck disable=SC2086  # SERVE_ARGS is a list of flags
+CUDA_VISIBLE_DEVICES=$GPU nohup "$HOBSON" serve "$CKPT" --host 127.0.0.1 --port "$PORT" $SERVE_ARGS \
   > "$OUT/server.log" 2>&1 &
 SERVER_PID=$!
 cleanup() {
@@ -173,7 +176,7 @@ meta = {
   "jevbench_commit": "$JB_HEAD", "tasks_sha256": "$TASKS_SHA", "n_tasks": $N_TASKS,
   "hobson_git_rev": "$HOBSON_REV", "hobson_src_dirty_files": "$HOBSON_DIRTY",
   "hobson_pkg": "$HOBSON_PKG", "hobson_pkg_py_sha256_16": "$HOBSON_SRC_SHA",
-  "gpu_index": "$GPU", "gpu": "$GPU_NAME", "port": $PORT,
+  "gpu_index": "$GPU", "gpu": "$GPU_NAME", "port": $PORT, "serve_args": "$SERVE_ARGS",
   "server_load_s": $LOAD_S, "jevbench_run_s": $RUN_S, "total_wall_s": $TOTAL_S,
   "n_attempted": s.get("n_attempted"), "n_failed": sum(1 for r in recs if not r["ok"]),
   "n_correct": s.get("n_correct"), "accuracy": s.get("accuracy"),

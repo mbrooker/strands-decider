@@ -2,12 +2,13 @@
 
     python research/scripts/bidi_figures.py --reports ~/hobson-bidi/reports --out research/figures
 
-Latency is per request, measured on one RTX 3090 under WSL2 in one session:
-- JevBench, from `evaluation/jevbench/jevbench.sh` (each task an HTTP request to the served
-  checkpoint, timed by JevBench). b1, e1a and e1b are from their runs; v19 and b2 were rerun
-  locally for this figure, in reports/latency/.
-- JF100, from `research/scripts/jf100_latency.py` (300 requests through the engine, in
-  process).
+Latency is per request, measured on one RTX 3090 under WSL2 in one session, every model served
+with compiled torso layers (`serve --compile`: per-layer torch.compile, warmed up before the
+first request), all in reports/latency_compiled/:
+- JevBench, from `evaluation/jevbench/jevbench.sh` with SERVE_ARGS=--compile (each task an
+  HTTP request to the served checkpoint, timed by JevBench).
+- JF100, from `research/scripts/jf100_latency.py --compile` (300 requests through the engine,
+  in process).
 
 Accuracy and Brier are each run's recorded JevBench result (the preregistrations' outcomes).
 
@@ -82,20 +83,19 @@ def five(values: list[float]) -> dict:
 
 def load_latency(reports: str) -> dict[str, dict[str, list[float]]]:
     def jev(path: str) -> list[float]:
-        # The first request of every run is a cold start (kernel compilation; 0.6-7.7 s, each
-        # run's slowest): dropped, as the JF100 harness warms up before timing.
+        # The first request of a run is dropped: uncompiled, it was a cold start (0.6-7.7 s);
+        # the compiled server warms up before /health, but the first request is still dropped
+        # so every run counts the same 230.
         rows = sorted(map(json.loads, open(path, encoding="utf-8")), key=lambda r: r["ts"])
         return [r["latency_s"] * 1000 for r in rows[1:]]
 
     def jf(path: str) -> list[float]:
         return [r["latency_ms"] for r in map(json.loads, open(path, encoding="utf-8"))]
 
-    jevbench_paths = {"b1": "b1/jevbench", "e1a": "e1a/jevbench", "e1b": "e1b/jevbench",
-                      "v19": "latency/jevbench_v19", "b2": "latency/jevbench_b2"}
     out: dict[str, dict[str, list[float]]] = {"JevBench": {}, "JF100": {}}
     for m, _, _ in MODELS:
-        out["JevBench"][m] = jev(os.path.join(reports, jevbench_paths[m], "results.jsonl"))
-        out["JF100"][m] = jf(os.path.join(reports, "latency", f"jf100_{m}.jsonl"))
+        out["JevBench"][m] = jev(os.path.join(reports, "latency_compiled", f"jevbench_{m}", "results.jsonl"))
+        out["JF100"][m] = jf(os.path.join(reports, "latency_compiled", f"jf100_{m}.jsonl"))
     return out
 
 
@@ -104,19 +104,20 @@ def fmt_ms(x: float) -> str:
 
 
 def latency_svg(lat: dict, path: str) -> list[dict]:
-    W, H = 920, 470
-    top, bottom, left = 96, 92, 64
-    panel_w, gap = 400, 56
+    # Panels stacked, one log scale for both: JevBench above JF100.
+    W, left, panel_w = 720, 64, 620
+    first_top, plot_h, step = 118, 230, 336  # step: one panel, its labels and the next header
+    H = first_top + step + plot_h + 108
     stats = {b: {m: five(lat[b][m]) for m, _, _ in MODELS} for b in lat}
     lo = min(s["min"] for b in stats for s in stats[b].values())
     hi = max(s["max"] for b in stats for s in stats[b].values())
     ylo = lo * 0.85
     yhi = hi * 1.15
-    ticks = [t for t in (10, 20, 50, 100, 200, 500, 1000, 2000, 5000) if ylo <= t <= yhi]
+    ticks = [t for t in (10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 5000) if ylo <= t <= yhi]
 
-    def y(v: float) -> float:
+    def y(v: float) -> float:  # within a panel whose plot starts at `top`
         frac = (math.log10(v) - math.log10(ylo)) / (math.log10(yhi) - math.log10(ylo))
-        return top + (H - top - bottom) * (1 - frac)
+        return top + plot_h * (1 - frac)
 
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'class="viz" role="img" aria-labelledby="t d">', STYLE,
@@ -127,12 +128,16 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
              + '</desc>',
              f'<rect class="bg" width="{W}" height="{H}"/>',
              f'<text class="title" x="{left - 40}" y="30">Request latency by model</text>',
-             f'<text class="sub" x="{left - 40}" y="50">Per request, one RTX 3090 under WSL2, log scale. '
+             f'<text class="sub" x="{left - 40}" y="50">Per request, served with --compile, one RTX 3090 '
+             'under WSL2, log scale, both panels on one scale.</text>',
+             f'<text class="sub" x="{left - 40}" y="66">'
              'Box: quartiles · line: median · whiskers: 1.5 × IQR · dots: beyond.</text>']
     rows = []
     for p, bench in enumerate(("JevBench", "JF100")):
-        x0 = left + p * (panel_w + gap)
-        how = ("230 tasks over HTTP, cold first request dropped" if bench == "JevBench"
+        x0 = left
+        top = first_top + p * step
+        bottom_y = top + plot_h
+        how = ("230 tasks over HTTP, first request dropped" if bench == "JevBench"
                else "300 requests, in process, warmed up")
         parts.append(f'<text class="panel" x="{x0}" y="{top - 22}">{bench}'
                      f'<tspan class="sub" dx="6">· {how}</tspan></text>')
@@ -140,7 +145,7 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
             parts.append(f'<line class="grid" x1="{x0}" x2="{x0 + panel_w}" y1="{y(t):.1f}" y2="{y(t):.1f}"/>'
                          f'<text class="tick" x="{x0 - 8}" y="{y(t) + 4:.1f}" text-anchor="end">{t:,}</text>')
         parts.append(f'<text class="tick" x="{x0 - 8}" y="{top - 6}" text-anchor="end">ms</text>')
-        parts.append(f'<line class="axis" x1="{x0}" x2="{x0 + panel_w}" y1="{H - bottom}" y2="{H - bottom}"/>')
+        parts.append(f'<line class="axis" x1="{x0}" x2="{x0 + panel_w}" y1="{bottom_y}" y2="{bottom_y}"/>')
         slot = panel_w / len(MODELS)
         for i, (m, torso, kind) in enumerate(MODELS):
             s = stats[bench][m]
@@ -166,9 +171,9 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
                      f'{fmt_ms(s["median"])}</text></g>')
             parts += g
             ref = " ref" if m == REFERENCE else ""
-            parts.append(f'<text class="name{ref}" x="{cx}" y="{H - bottom + 18}" text-anchor="middle">{m}</text>'
-                         f'<text class="torso" x="{cx}" y="{H - bottom + 32}" text-anchor="middle">{escape(torso)}</text>'
-                         f'<text class="torso" x="{cx}" y="{H - bottom + 44}" text-anchor="middle">{escape(kind)}</text>')
+            parts.append(f'<text class="name{ref}" x="{cx}" y="{bottom_y + 18}" text-anchor="middle">{m}</text>'
+                         f'<text class="torso" x="{cx}" y="{bottom_y + 32}" text-anchor="middle">{escape(torso)}</text>'
+                         f'<text class="torso" x="{cx}" y="{bottom_y + 44}" text-anchor="middle">{escape(kind)}</text>')
             rows.append({"benchmark": bench, "model": m, **{k: round(v, 1) for k, v in s.items()
                                                            if k not in ("outliers",)},
                          "outliers": len(s["outliers"])})

@@ -65,6 +65,9 @@ class EngineConfig:
     # Refuse a prompt that does not fit the window instead of shortening it, for
     # benchmarks that forbid truncation. The message names the "context window".
     strict_window: bool = False
+    # torch.compile each torso layer (StrandsDeciderModel.compile_layers) and warm the
+    # compiled graphs up before the first request. Speed only.
+    compile: bool = False
 
 
 class UnforkableCache(TypeError):
@@ -190,6 +193,36 @@ class SystemOneEngine:
             print("[strands-decider] bidirectional torso or mean query: no shared-prefix "
                   "cache; questions are encoded with the state, batched")
             self.cfg = replace(self.cfg, use_prefix_cache=False)
+        if self.cfg.compile:
+            n = self.model.compile_layers()
+            print(f"[strands-decider] compiled {n} torso layers; warming up", flush=True)
+            self._warm_up()
+            print("[strands-decider] warm-up done", flush=True)
+
+    def _warm_up(self) -> None:
+        """Run the compiled graphs once per path a request can take, before serving.
+
+        `dynamic=True` still specialises: on a size of 1, so one question (batch 1, the
+        batched path) and several (batch > 1: the shared-prefix or state-cache path, whose
+        state forward is batch 1 too) compile separately; and SDPA guards on the sequence
+        length's alignment (`L % 8`, `L * L % 8`, `(1 + L) % 8`), so each residue class
+        mod 8 is its own graph. Eight consecutive lengths (" the" is one token in every
+        torso's vocabulary) cover them, short and past T5Gemma 2's sliding windows (512
+        and 1,024 tokens), then a state that fills the context window. Without this, a
+        request that lands in a new class pays 3-5 s of compilation (measured on b1, b2,
+        e1a and e1b).
+        """
+        from .schema import ChoiceQuestion, NoulQuestion
+
+        sentence = "The quick brown fox jumps over the lazy dog. "
+        one = {"q": ChoiceQuestion(instructions="Which animal jumps?",
+                                   criteria={"fox": "", "dog": "", "cat": ""})}
+        two = {**one, "r": NoulQuestion(instructions="Is the dog asleep?")}
+        states = [sentence * reps + " the" * k for reps in (4, 120) for k in range(8)]
+        states.append(sentence * (self.model.config.max_length // 8))  # truncated to fit
+        for state in states:
+            self.ask(state, one)
+            self.ask(state, two)
 
     def _upcast_torso_for_cpu(self) -> None:
         """Run a half-precision torso in fp32 on CPU.
@@ -354,24 +387,30 @@ class SystemOneEngine:
         cfg: Any = torso.config
         window = cfg.sliding_window
         previous = cfg._attn_implementation
-        try:
-            cfg._attn_implementation = _STATE_CACHE_IMPL
-            _STATE_CACHE.update(mode="record", kv={})
-            state_ids = torch.tensor([s], device=self.device)
-            state_masks = bidirectional_masks(torch.ones_like(state_ids), window)
-            h_state = torso(input_ids=state_ids, attention_mask=state_masks).last_hidden_state
+        # Eager under serve --compile. Traced, the store keyed by layer makes each layer index
+        # its own graph (26 layers x record/replay, past dynamo's recompile limit), and with the
+        # store kept out of the graph instead, one-question requests, which never come here,
+        # got 6 ms slower (e1b on JF100: 35 ms against 29). These requests are long and
+        # GPU-bound, so compiling gains least here.
+        with torch.compiler.set_stance("force_eager"):
+            try:
+                cfg._attn_implementation = _STATE_CACHE_IMPL
+                _STATE_CACHE.update(mode="record", kv={})
+                state_ids = torch.tensor([s], device=self.device)
+                state_masks = bidirectional_masks(torch.ones_like(state_ids), window)
+                h_state = torso(input_ids=state_ids, attention_mask=state_masks).last_hidden_state
 
-            _STATE_CACHE["mode"] = "replay"
-            q_ids, q_mask = self._pad(q)
-            width = q_ids.size(1)
-            whole = torch.cat([torch.ones(m, n, dtype=q_mask.dtype, device=self.device), q_mask], 1)
-            masks = {k: v[:, :, n:, :] for k, v in bidirectional_masks(
-                whole, window, torch.full((m,), n, device=self.device)).items()}
-            positions = (n + torch.arange(width, device=self.device)).expand(m, width)
-            h_q = torso(input_ids=q_ids, attention_mask=masks, position_ids=positions).last_hidden_state
-        finally:
-            cfg._attn_implementation = previous
-            _STATE_CACHE.update(mode=None, kv={})
+                _STATE_CACHE["mode"] = "replay"
+                q_ids, q_mask = self._pad(q)
+                width = q_ids.size(1)
+                whole = torch.cat([torch.ones(m, n, dtype=q_mask.dtype, device=self.device), q_mask], 1)
+                masks = {k: v[:, :, n:, :] for k, v in bidirectional_masks(
+                    whole, window, torch.full((m,), n, device=self.device)).items()}
+                positions = (n + torch.arange(width, device=self.device)).expand(m, width)
+                h_q = torso(input_ids=q_ids, attention_mask=masks, position_ids=positions).last_hidden_state
+            finally:
+                cfg._attn_implementation = previous
+                _STATE_CACHE.update(mode=None, kv={})
 
         valid = q_mask.to(torch.float32).unsqueeze(-1)
         total = h_state[0].to(torch.float32).sum(0) + (h_q.to(torch.float32) * valid).sum(1)
@@ -586,13 +625,16 @@ def load_engine(
     device: str = "cuda",
     use_prefix_cache: bool = True,
     attn_implementation: str | None = None,
+    compile: bool = False,
 ) -> SystemOneEngine:
     """An engine on a torch device ("cuda", "mps", "cpu"), or on MLX with `device="mlx"`."""
     if device == "mlx":
+        if compile:
+            raise ValueError("compile is for torch devices, not mlx")
         return load_mlx(checkpoint, EngineConfig(device="mlx", use_prefix_cache=use_prefix_cache))
     model = StrandsDeciderModel.load(checkpoint, attn_implementation=attn_implementation)
     return SystemOneEngine(
-        model, EngineConfig(device=device, use_prefix_cache=use_prefix_cache)
+        model, EngineConfig(device=device, use_prefix_cache=use_prefix_cache, compile=compile)
     )
 
 

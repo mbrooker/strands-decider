@@ -430,7 +430,15 @@ class StrandsDeciderModel(nn.Module):
         on T5Gemma 2 at 8 x 256 tokens that made a step CPU-bound, 1.04 s against 0.48 s of
         GPU work. Compiling per layer fuses them: 0.51 s. `dynamic=True` compiles once for
         every sequence length the length-grouped sampler produces.
+
+        A hybrid torso's gated delta rule (Qwen3.5's linear attention) stays out of the
+        graph: with flash-linear-attention installed it is already fused Triton, and Inductor
+        traced into it computes its kernels' launch grid wrong under dynamic shapes
+        (ZeroDivisionError in the generated code, torch 2.7.1). The rest of each such layer
+        (projections, convolution, norms, gating, MLP) still compiles.
         """
+        import sys
+
         from transformers.modeling_layers import GradientCheckpointingLayer
 
         # train and eval modes compile separately; the default limit (8) is close for 52 layers
@@ -439,6 +447,15 @@ class StrandsDeciderModel(nn.Module):
         n = 0
         for module in self.torso.modules():
             if isinstance(module, GradientCheckpointingLayer):
+                if getattr(module, "block_type", None) == "linear_attention":
+                    # The layer calls these by their module-global names, so this reaches it.
+                    mod = sys.modules[type(module).__module__]
+                    for name in ("torch_chunk_gated_delta_rule", "torch_recurrent_gated_delta_rule"):
+                        fn = getattr(mod, name, None)
+                        if fn is not None and not getattr(fn, "_strands_eager", False):
+                            fn = torch.compiler.disable(fn)
+                            fn._strands_eager = True
+                            setattr(mod, name, fn)
                 module.compile(dynamic=True)
                 n += 1
         return n

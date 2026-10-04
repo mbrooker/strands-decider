@@ -35,6 +35,7 @@ def create_app(
     attn_implementation: str | None = None,
     strict_window: bool = False,
     max_batch: int = 32,
+    compile: bool = False,
 ) -> FastAPI:
     global _engine
 
@@ -50,9 +51,11 @@ def create_app(
 
     config = EngineConfig(
         device=device, use_prefix_cache=use_prefix_cache, model_name=resolved_name,
-        strict_window=strict_window, max_batch=max_batch,
+        strict_window=strict_window, max_batch=max_batch, compile=compile,
     )
     if device == "mlx":
+        if compile:
+            raise ValueError("--compile is for torch devices, not mlx")
         _engine = load_mlx(checkpoint, config)
     else:
         model = StrandsDeciderModel.load(checkpoint, attn_implementation=attn_implementation)
@@ -71,6 +74,7 @@ def create_app(
             "temperature": eng.model.config.temperature,
             "device": eng.cfg.device,
             "prefix_cache": eng.cfg.use_prefix_cache,
+            "compiled": getattr(eng.cfg, "compile", False),
         }
 
     @app.post("/v1/systemone", response_model=SystemOneResponse)
@@ -100,6 +104,7 @@ def serve(
     model_name: str | None = None,
     strict_window: bool = False,
     max_batch: int = 32,
+    compile: bool = False,
 ) -> None:
     import uvicorn
 
@@ -110,6 +115,7 @@ def serve(
         model_name=model_name,
         strict_window=strict_window,
         max_batch=max_batch,
+        compile=compile,
     )
     # Single worker: the model owns the GPU, and forking more would just duplicate it.
     uvicorn.run(app, host=host, port=port, workers=1)

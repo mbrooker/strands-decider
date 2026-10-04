@@ -6,7 +6,7 @@ option letters A-D as choice names, one question per request, rotation by trial)
 Python, which syncs the device. A few untimed requests warm up first. Writes one JSON line
 per request: item, trial, latency_ms, correct.
 
-    python research/scripts/jf100_latency.py CHECKPOINT ~/sd_eval/jf100 --out lat.jsonl
+    python research/scripts/jf100_latency.py CHECKPOINT ~/sd_eval/jf100 --out lat.jsonl [--compile]
 """
 from __future__ import annotations
 
@@ -40,6 +40,7 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--warmup", type=int, default=5)
+    ap.add_argument("--compile", action="store_true", help="compiled torso layers (serve --compile)")
     args = ap.parse_args()
 
     root = Path(args.jf100)
@@ -48,7 +49,7 @@ def main() -> None:
     assert hashlib.sha256(raw).hexdigest() == want, "JF100 items differ from the frozen manifest"
     items = [json.loads(line) for line in raw.decode().splitlines()]
 
-    engine = load_engine(args.checkpoint, device=args.device)
+    engine = load_engine(args.checkpoint, device=args.device, compile=args.compile)
 
     def ask(item: dict, trial: int) -> tuple[str, str]:
         options, gold = presented(item, trial)
@@ -70,7 +71,7 @@ def main() -> None:
         for r in rows:
             fh.write(json.dumps(r) + "\n")
     lat = sorted(r["latency_ms"] for r in rows)
-    print(json.dumps({"checkpoint": args.checkpoint, "n": len(rows),
+    print(json.dumps({"checkpoint": args.checkpoint, "compiled": args.compile, "n": len(rows),
                       "correct": sum(r["correct"] for r in rows),
                       "p50_ms": round(statistics.median(lat), 1),
                       "p95_ms": round(lat[int(0.95 * (len(lat) - 1))], 1)}))

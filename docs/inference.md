@@ -215,6 +215,12 @@ with HTTP 422 and a message that names the context window, for an evaluation tha
 truncation. `--max-batch N` (default 32) sets how many questions one forward pass encodes;
 lower it when a very long state with many questions does not fit in GPU memory.
 
+`--compile` runs each torso layer through `torch.compile` (`dynamic=True`) and warms the
+compiled graphs up before `/health` answers, so no request pays for compilation. Startup
+takes a few minutes longer; requests get faster, most of all short ones, where the
+per-layer kernel overhead dominates. In bf16 the fused kernels change rounding, so a
+borderline answer can flip. Torch devices only.
+
 ## Asking many questions is nearly free
 
 *The latency table below was measured on v7, a Qwen3 torso. The cache now also forks the
