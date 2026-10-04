@@ -219,3 +219,98 @@ like b1's probe, it could not see this. A probe that predicts JevBench needs out
 distribution items: JevBench's own, JF100 or Typed Decisions.
 
 ## Outcome: e1b (added after the run)
+
+Nothing above this section was edited after e1b trained. e1b's code and config were
+committed at `3cecf40`, before it trained, as the "What is being run" section requires.
+**By the rule fixed above, e1b does not replace e1a.** Prediction 1 held. Predictions 2,
+3 and 4 each failed on one clause, two of them narrowly. The named failure, "e1b more than
+5 tasks below e1a", is not met: e1b is 18 tasks above it.
+
+The run: commit `3cecf40`, RTX 3090 under WSL2, 4 October 2026. Training took about 5 h
+(09:22 to about 14:25 UTC), 3,738 steps at 0.21 to 0.22 steps/s, the same rate as e1a.
+Peak allocation 15.6 GiB, at most 18.6 GB in use on the card, no spill. Final validation
+loss / accuracy 0.406 / 0.813 (e1a 0.393 / 0.820). Calibration temperatures: choice 1.130,
+yes/no 1.192, score 2.401. Outputs are in `~/hobson-bidi/reports/e1b/`.
+
+| | prediction (against e1a) | e1a | e1b | |
+| --- | --- | --- | --- | --- |
+| 1 | the cache is exact: CPU test in fp32; trained checkpoint at bf16 tolerance | | fp32 identical (max difference 0.0000, 0 of 32 answers differ); bf16 max difference 0.005, one near-tie flip in 32 | pass |
+| 2 | 8 questions x 4,000 tokens <= 700 ms; 5 x 1,024 below e1a's | 3,803; 617 ms | **785** ms; 227 ms | FAIL (first clause) |
+| 3 | JevBench >= e1a - 5 (148); no set more than 0.03 below e1a | 153 | **171**; HotpotQA 0.677 (e1a 0.748) | FAIL (HotpotQA) |
+| 4 | JevBench median within 10% of e1a's | 80 ms | 89 ms (+11%) | FAIL |
+
+**Exactness on the trained checkpoint**: eight `bench_local` questions at each of 256,
+1,024, 2,048 and 4,000 state tokens, through the cached path and the batched masked path.
+In fp32 the two give identical distributions. In bf16 the largest difference in any
+probability is 0.005. The one changed answer was a tie: billing 0.459 against technical
+0.454 through the cache, 0.456 against 0.457 batched.
+
+**JevBench: 171/231** (easy 48, standard 64, hard 59). Paired against v19's recorded run
+(167): 20 gained, 16 lost, p = 0.62, so level with v19, not ahead. Against e1a: +18 with
+only the attention mask changed, beyond the 4.5-task noise between retrains. Brier 0.372,
+**ECE 0.063**, paraphrase consistency 0.889. Families: adequacy 0.833 (e1a 0.50),
+multi_hop 0.667 (e1a 0.389), probability 0.60 (0.30), long_policy 0.368 (0.211), trap
+1.0. judge_hard 0.353 and temporal_numeric 0.267 remain the weakest.
+
+| JevBench, by e1a's input tokens | n | v19 | b1 | e1a | e1b |
+| --- | --- | --- | --- | --- | --- |
+| under 500 | 166 | 0.861 | 0.771 | 0.795 | **0.843** |
+| 500 to 1,500 | 28 | 0.321 | 0.321 | 0.357 | **0.429** |
+| 1,500 to 3,000 | 29 | 0.414 | 0.414 | 0.345 | **0.552** |
+| 3,000 and over | 8 | 0.375 | 0.500 | 0.125 | 0.375 |
+
+**Sets** (e1a's in brackets): held-out 0.669 (0.695, ECE 0.068); MuSiQue 0.942 (0.948);
+ContractNLI 0.862 (0.864); BoardgameQA 0.856 (0.884); HotpotQA 0.677 (0.748); generated
+0.829 / 0.818 (0.851 / 0.786); adequacy, HelpSteer2 0.731 (0.761); adequacy, generated,
+balanced 0.823 (0.821). Every v19-level floor of e1a's prediction 2 still holds except
+HotpotQA (0.699).
+
+**External benchmarks:** JF100 156/300 (e1a 158, v19 162, g4 172); Typed Decisions 0.549 /
+KL 0.305 (e1a 0.525 / 0.309, v19 0.614, g4 0.669).
+
+**Latency** (`bench_local`, median ms; cache / batched):
+
+| state tokens | 1 question | 5 questions | 8 questions |
+| --- | --- | --- | --- |
+| 256 | 84 | 166 / 235 | 182 / 337 |
+| 1,024 | 146 | 227 / 665 | 253 / 1,041 |
+| 2,048 | 285 | 369 / 1,334 | 417 / 2,159 |
+| 4,000 | 605 | 731 / 2,861 | 785 / 4,514 |
+
+The cache makes the eighth question nearly free, as the prefix cache does for v19. Eight
+questions on 4,000 tokens cost 1.3x one question (v19: 500 ms with its cache). The cost
+that remains is the state pass itself, about 0.6 s at 4,000 tokens on this card.
+
+**Diagnostics (exploratory, after the predictions were scored).**
+`research/scripts/sets_by_length.py`, v19, e1a and e1b on the same rows, by prompt-length
+quartile:
+
+| e1b minus e1a | shortest quarter | 2nd | 3rd | longest | all |
+| --- | --- | --- | --- | --- | --- |
+| HotpotQA | -0.092 | -0.054 | -0.042 | -0.095 | -0.071 |
+| BoardgameQA | -0.036 | 0.000 | +0.009 | -0.089 | -0.029 |
+| generated, v16's | -0.046 | 0.000 | -0.011 | -0.034 | -0.023 |
+| generated, v18's | 0.000 | +0.066 | +0.049 | +0.016 | +0.032 |
+| adequacy, HelpSteer2 | -0.034 | +0.034 | -0.086 | -0.033 | -0.030 |
+
+MuSiQue (-0.006), ContractNLI (-0.002) and generated adequacy (-0.007) are flat. The mask's
+cost does not grow with length. It falls mostly on HotpotQA, at every length. HotpotQA's
+rows are distractor paragraphs, where finding the relevant passage depends on the
+question. Under the mask only the question's own tokens can do that selection; the state's
+tokens never see the question. Against v19, e1b is ahead on MuSiQue (+0.060), BoardgameQA
+(+0.036), generated v18 (+0.040) and both adequacy sets, and behind on HotpotQA (-0.043),
+generated v16 (-0.029) and ContractNLI (-0.012).
+
+**Reading.** The mask was introduced for speed and did more than that: e1b is the first
+bidirectional model in this fork to reach v19 on JevBench (171 against 168), and the only
+one with an exact shared-state cache. Against e1a, the in-distribution sets dropped a
+little (HotpotQA most), while JevBench rose 18, at every prompt length and most in the
+middle lengths and the multi-hop, adequacy and probability families. A reading, not
+tested: a state encoded without sight of the question is encoded generically, and that
+transfers to JevBench's unfamiliar questions better than e1a's question-shaped encoding,
+which the training families had rewarded. The rule's three misses are each a clause of an
+efficiency or tolerance prediction: 785 against 700 ms, +11% against 10%, and one set
+outside 0.03. None is in the direction the preregistration feared (accuracy lost to the
+mask). For context, recorded after this run: b2, b1's encoder-decoder recipe on
+T5Gemma 2 4B+4B, scored 178 (PREREGISTRATION-b2.md). That is the best bidirectional result,
+at about four times e1b's torso size.
