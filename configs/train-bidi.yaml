@@ -1,17 +1,21 @@
-# The hobson-bidi reference recipe: configs/experiments/b1.yaml except output_dir, so that
+# The hobson-bidi reference recipe: configs/experiments/e1b.yaml except output_dir, so that
 # rerunning the recipe never overwrites the checkpoint it reproduces. training/recipe.sh
-# trains this by default (TRAIN_CONFIG).
+# trains this by default (TRAIN_CONFIG). e1b was made the reference on 4 October 2026
+# (research/preregistrations/PREREGISTRATION-e1.md, Decision); b1's recipe is
+# configs/experiments/b1.yaml.
 
 train_files: ["data/train_v5.jsonl", "data/multistep_v14.jsonl", "data/generated_v16.jsonl",
               "data/generated_v18.jsonl", "data/adequacy_hs2.jsonl", "data/adequacy_gen.jsonl"]
 val_fraction: 0.03
 
-base_model: "google/t5gemma-2-1b-1b"
+base_model: "google/t5gemma-2b-2b-ul2-it"
 num_slots: 24           # must match `data build --max-options`; also the KL reference width
-head_type: "xpointer"   # pointer readout with separate query/key norms; see modeling.CrossPointerHead
+head_type: "xpointer"   # separate query/key norms: a mean and a token state differ in scale
+query_pool: "mean"
+state_mask: true        # the one difference from e1a
 pointer_dim: 256
 head_init: "random"
-kl_frozen_weight: 0.0   # no frozen-torso anchor: the untrained readout is 0.33 (Phase 0)
+kl_frozen_weight: 0.0   # an encoder has no LM readout to anchor to
 teacher_file: "data/teacher_g4.jsonl"   # training/recipe.sh teacher31b
 teacher_weight: 1.0
 head_dropout: 0.05
@@ -21,13 +25,13 @@ attn_implementation: "sdpa"
 use_lora: true
 lora_r: 16
 lora_alpha: 32
-# Encoder and decoder alike; the vision tower is dropped before LoRA attaches.
+# The encoder's attention and MLP projections (the decoder is not loaded).
 lora_targets: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 freeze_torso: false
 
 epochs: 1
-micro_batch_size: 16
-grad_accum: 2           # effective batch 32, as g4
+micro_batch_size: 8
+grad_accum: 4           # effective batch 32, as g4
 lr: 0.0001              # LoRA
 head_lr: 0.001
 weight_decay: 0.01

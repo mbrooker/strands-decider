@@ -314,3 +314,27 @@ outside 0.03. None is in the direction the preregistration feared (accuracy lost
 mask). For context, recorded after this run: b2, b1's encoder-decoder recipe on
 T5Gemma 2 4B+4B, scored 178 (PREREGISTRATION-b2.md). That is the best bidirectional result,
 at about four times e1b's torso size.
+
+## Decision, 4 October 2026
+
+**e1b is made hobson-bidi's reference model, by the owner's decision overriding the rule
+above**, as g4 was in hobson-gemma4 and v14, v16, v17 and v18 were upstream. The rule's
+verdict stands as recorded. e1b missed three predictions, each on one clause:
+- 785 ms against a 700 ms bar for eight questions on a 4,000-token state;
+- single-question latency +11% against e1a, where 10% was allowed;
+- HotpotQA 0.071 below e1a, where 0.03 was allowed.
+
+The grounds are the rest:
+- JevBench 171, the first bidirectional model in this fork at v19's level (168), and 18
+  above e1a with only the attention mask changed;
+- JevBench ECE 0.063;
+- the state cache shown exact (fp32 identical; bf16 within 0.005), making a request's
+  later questions nearly free, as v19's prefix cache does;
+- a JevBench median of 89 ms against v19's 115.
+
+These are the goals this direction set itself: latency and multi-question cost, with
+JevBench no worse than b1 (docs/encoder-design.md).
+
+`configs/train-bidi.yaml`, the recipe's default, is now e1b's config, except
+`output_dir`. b1's remains `configs/experiments/b1.yaml`. The checkpoint is
+`~/hobson-bidi/checkpoints/bidi-e1b`, trained at `3cecf40`.

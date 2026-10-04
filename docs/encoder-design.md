@@ -5,6 +5,13 @@ encoder-decoder, and its run b1. This document covers why the fork moved to enco
 torsos, the Phase 0 that chose between them, and the design of the runs it led to: e1 in two
 arms, then e2. Figures marked *estimate* are projections, not measurements.
 
+> **Status, 4 October 2026: e1b is hobson-bidi's reference model**, by the owner's decision
+> overriding its preregistered rule. It scored JevBench 171 (v19 168), with ECE 0.063, a
+> JevBench median of 89 ms, and an exact state cache: eight questions on a 4,000-token
+> state in 785 ms. e1a scored 153. Both outcomes and the decision are in
+> [PREREGISTRATION-e1.md](../research/preregistrations/PREREGISTRATION-e1.md).
+> `configs/train-bidi.yaml`, the recipe's default, is e1b's config.
+
 ## Why
 
 b1 (T5Gemma 2 1B+1B) failed its preregistration: JevBench 153/231, against v19's 168

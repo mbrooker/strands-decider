@@ -11,7 +11,8 @@ measurements.
 > (0.044) was the best recorded. Reasoning, adequacy and latency regressed. See
 > [The first run, b1](#the-first-run-b1) and
 > [PREREGISTRATION-b1.md](../research/preregistrations/PREREGISTRATION-b1.md). Several
-> estimates below were wrong, and the sections below say which.
+> estimates below were wrong, and the sections below say which. The fork's reference is
+> now e1b, an encoder-only torso ([encoder-design.md](encoder-design.md)).
 
 ## Why an encoder-decoder
 

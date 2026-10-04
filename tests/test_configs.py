@@ -56,11 +56,17 @@ def test_v19_seed1_is_v19_except_seed_and_output_dir():
     assert _differing_keys(seed1, v19) == {"seed", "output_dir"}
 
 
-def test_train_bidi_yaml_is_b1_except_output_dir():
-    bidi, b1 = _load("configs", "train-bidi.yaml"), _load("configs", "experiments", "b1.yaml")
-    assert _differing_keys(bidi, b1) == {"output_dir"}
+def test_train_bidi_yaml_is_e1b_except_output_dir():
+    # e1b is hobson-bidi's reference (PREREGISTRATION-e1.md, Decision, 4 October 2026).
+    bidi, e1b = _load("configs", "train-bidi.yaml"), _load("configs", "experiments", "e1b.yaml")
+    assert _differing_keys(bidi, e1b) == {"output_dir"}
     # The file that `training/recipe.sh teacher31b` writes and checks against data/SHA256SUMS.
-    assert b1["teacher_file"] == "data/teacher_g4.jsonl"
+    assert e1b["teacher_file"] == "data/teacher_g4.jsonl"
+
+
+def test_e1b_is_e1a_plus_the_state_mask():
+    e1a, e1b = _load("configs", "experiments", "e1a.yaml"), _load("configs", "experiments", "e1b.yaml")
+    assert _differing_keys(e1a, e1b) == {"state_mask", "output_dir"}
 
 
 def test_v19_saved_configs_load():

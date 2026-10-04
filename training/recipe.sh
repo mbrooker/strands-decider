@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# hobson-bidi: `all` runs the fork's recipe, b1 (configs/train-bidi.yaml, a T5Gemma 2 torso
-# on g4's rows and targets; docs/bidi-design.md):
+# hobson-bidi: `all` runs the fork's reference recipe, e1b (configs/train-bidi.yaml: the
+# T5Gemma 2B-it UL2 encoder with the masked state cache, on g4's rows and targets;
+# docs/encoder-design.md). b1's recipe is TRAIN_CONFIG=configs/experiments/b1.yaml:
 #
 #   corpus      copy the built corpora and eval sets from $CORPUS_SRC (default
 #               ~/hobson-gemma4/data), where g4's teacher labels were made. Labels attach
