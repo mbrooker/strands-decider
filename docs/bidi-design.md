@@ -2,9 +2,16 @@
 
 This fork replaces the decoder-only torso of strands-decider (Qwen3.5-2B-Base in v19,
 Gemma 4 E2B in the `hobson-gemma4` fork's g4) with the encoder-decoder
-`google/t5gemma-2-1b-1b`. This document designs the training and inference processes
-before any code changes. Nothing here has been run yet. Figures marked *estimate* are
-projections, not measurements.
+`google/t5gemma-2-1b-1b`. This document designs the training and inference processes,
+and was written before the code. Figures marked *estimate* are projections, not
+measurements.
+
+> **Status, 4 October 2026: b1 has run and failed its preregistration.** JevBench 153/231
+> (v19 168, g4 183). Order sensitivity fell to 0.035 from v19's 0.088, and JevBench ECE
+> (0.044) was the best recorded. Reasoning, adequacy and latency regressed. See
+> [The first run, b1](#the-first-run-b1) and
+> [PREREGISTRATION-b1.md](../research/preregistrations/PREREGISTRATION-b1.md). Several
+> estimates below were wrong, and the sections below say which.
 
 ## Why an encoder-decoder
 
@@ -346,22 +353,34 @@ Decisions for b1:
 
 ## The first run, b1
 
-Written as a preregistration (`research/preregistrations/PREREGISTRATION-b1.md`)
-before training, in upstream's style. Draft predictions, to be fixed after Phase 0:
+Preregistered in
+[PREREGISTRATION-b1.md](../research/preregistrations/PREREGISTRATION-b1.md), which holds
+the predictions as fixed, the run and the full outcome. In brief:
 
-- JevBench public: at least g4's 183 within retrain noise (std 3.2 tasks; a difference
-  under ~10 is unresolved). Against v19's 168: better.
-- Order sensitivity, measured as the distribution shift when the option list is
-  reversed: well below v19's ~0.016. A new script, `evaluation/order_sensitivity.py`,
-  runs it on the held-out short tasks for b1, v19 and g4.
-- Multi-step (MuSiQue, BoardgameQA, HotpotQA transfer) is where joint bidirectional
-  reading should help most. The floors are g4's.
-- Calibration: ECE no worse than g4's 0.048 after temperature fitting.
-- Latency: single-question median below v19's 115 ms on the 3090, and the
-  five-question, 2,000-token case measured and reported as is.
+| | v19 | g4 | b1 | prediction |
+| --- | --- | --- | --- | --- |
+| JevBench (231) | 168 | 183 | **153** | >= 179, failed |
+| order sensitivity, TV / argmax flips | 0.088 / 15.6% | | **0.035 / 5.2%** | <= 0.044, held |
+| JevBench ECE; held-out ECE | 0.051; 0.054 | 0.048; 0.065 | **0.044**; 0.065 | held |
+| floors within 0.02 of g4 (nine sets) | | | three held, six below | failed |
+| single-question latency, median | 115 ms | | 216 ms | < 115 ms, failed |
 
-Failure conditions are written with the predictions. A miss is recorded, not edited
-away.
+What held is what the architecture argument predicted: order invariance, calibration,
+and short classification (held-out 0.671, the best recorded). What failed is judgement
+and reasoning (multi-hop, temporal and numeric, adequacy, HotpotQA 0.605), at every
+prompt length. So the encoder's local window is not the cause. Adequacy fails one-sidedly:
+adequate answers are called inadequate. The leading reading, not measured, is torso
+capacity: Gemma 3 1B is weaker at reasoning than Qwen3.5-2B or Gemma 4 E2B.
+
+Where this document's estimates were wrong:
+
+- *Latency.* b1 is slower than v19 at every state length, not twice as fast. At short
+  lengths the cost looks like per-layer overhead across 52 uncompiled layers, not FLOPs.
+- *Training time.* It took 3 h, inside the first estimate, but only after compiling
+  the layers and switching to `expandable_segments` (the first launch spilled under WSL2).
+- *Phase 0 as a predictor.* The frozen-feature fits used short held-out classification,
+  where b1 did win. They never sampled the reasoning families, where it lost. A future
+  probe needs a reasoning slice.
 
 ## Code changes
 
@@ -407,10 +426,12 @@ prohibited-use policy. This matters only when publishing a checkpoint.
 
 ## Open questions
 
-1. Is joint-encoder accuracy worth the multi-question cost, or should the split
-   design run first? This document assumes accuracy first.
-2. Encoder-only or encoder-decoder: Phase 0's frozen-feature fit may show the decoder
-   adds nothing. If so, b1 should drop the decoder and serve at half the parameters.
-3. Does the pretrained (non-instruction-tuned) T5Gemma 2 need the frozen-KL anchor that
-   g4 dropped? g4's torso was instruction-tuned. Phase 0's untrained readout is the
-   evidence. If it is weak, the 31B teacher is enough on its own.
+1. *Joint-encoder accuracy against multi-question cost.* Answered against: b1 lost
+   accuracy and paid the multi-question cost anyway (eight questions on a
+   4,000-token state, 2.3 s against v19's 0.5 s).
+2. *Encoder-only or encoder-decoder.* Phase 0 put the decoder query +0.012 ahead on
+   frozen features, and b1 kept it. Still open, and now the next direction, chosen for
+   latency and multi-question cost: an encoder-only torso, with candidates compared
+   first in a Phase 0 that includes a reasoning slice.
+3. *A frozen-KL anchor.* Not needed: the untrained readout was 0.33, near chance, and b1
+   trained without one, as g4 did.

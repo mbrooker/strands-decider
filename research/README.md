@@ -61,3 +61,4 @@ The files are frozen and name the paths of the layout they were written in;
 | v19-calmix | Calibrating v19 on a broader held-out mix, no training | Rule failed on NLL. v19's temperatures stay. | [PREREGISTRATION-v19-calmix.md](preregistrations/PREREGISTRATION-v19-calmix.md) |
 | v19-seed1 | The seed replicate of v19 | Stopped at step 1,420. No results taken. | [PREREGISTRATION-v19-seed1.md](preregistrations/PREREGISTRATION-v19-seed1.md) |
 | v20 | Reading the question, and confidence | Four predictions failed (169 at the 4096 window). v19 stays the reference recipe. | [PREREGISTRATION-v20.md](preregistrations/PREREGISTRATION-v20.md) |
+| b1 (hobson-bidi) | g4's recipe on a T5Gemma 2 1B+1B encoder-decoder torso | Three predictions failed (153). Order sensitivity fell to 0.035 from v19's 0.088, and JevBench ECE (0.044) was the best recorded; reasoning, adequacy and latency regressed. Not a reference. | [PREREGISTRATION-b1.md](preregistrations/PREREGISTRATION-b1.md) |
