@@ -352,27 +352,27 @@ def load_lengths(reports: str, jf100_dir: str) -> dict[str, dict[str, list[tuple
 
 
 def length_svg(data: dict, path: str) -> None:
-    """Latency against prompt length, JevBench above JF100, one x and one log y scale for both."""
+    """Latency against prompt length, JevBench above JF100, one x and one linear y scale for both."""
     W, left, panel_w = 720, 64, 620
     first_top, plot_h, step = 136, 250, 340
     H = first_top + step + plot_h + 90
     pts = [p for bench in data.values() for series in bench.values() for p in series]
     xhi = math.ceil(max(t for t, _, _ in pts) / 500) * 500
-    ylo, yhi = min(ms for _, ms, _ in pts) * 0.85, max(ms for _, ms, _ in pts) * 1.15
-    yticks = [t for t in (10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000) if ylo <= t <= yhi]
+    ystep = 50
+    yhi = math.ceil(max(ms for _, ms, _ in pts) * 1.05 / ystep) * ystep
+    yticks = list(range(0, yhi + 1, ystep))
     names = {m: f"{m} ({t} {k})" for m, t, k in MODELS}
 
     def x(v: float) -> float:
         return left + panel_w * v / xhi
 
     def y(v: float, top: float) -> float:
-        frac = (math.log10(v) - math.log10(ylo)) / (math.log10(yhi) - math.log10(ylo))
-        return top + plot_h * (1 - frac)
+        return top + plot_h * (1 - v / yhi)
 
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'class="viz" role="img" aria-labelledby="t d">', STYLE,
              '<title id="t">Request latency against prompt length, e1b and v19</title>',
-             '<desc id="d">Scatter of per-request latency (log scale) against input tokens for e1b and v19, '
+             '<desc id="d">Scatter of per-request latency against input tokens for e1b and v19, '
              'served with --compile on one RTX 3090. ' + escape("; ".join(
                  f"{bench} {m}: {len(s)} requests, {min(t for t, _, _ in s)}-{max(t for t, _, _ in s)} tokens, "
                  f"median {statistics.median(ms for _, ms, _ in s):.0f} ms"
@@ -380,7 +380,7 @@ def length_svg(data: dict, path: str) -> None:
              f'<rect class="bg" width="{W}" height="{H}"/>',
              f'<text class="title" x="{left - 40}" y="30">Request latency against prompt length</text>',
              f'<text class="sub" x="{left - 40}" y="50">Per request, served with --compile, one RTX 3090 '
-             'under WSL2. Log latency, both panels on one scale.</text>']
+             'under WSL2. Both panels on one scale.</text>']
     kx = left - 40
     for m, cls in LENGTH_MODELS:  # legend
         parts.append(f'<circle class="key {cls}" cx="{kx + 5}" cy="76" r="5"/>'
@@ -396,7 +396,7 @@ def length_svg(data: dict, path: str) -> None:
         for t in yticks:
             parts.append(f'<line class="grid" x1="{left}" x2="{left + panel_w}" y1="{y(t, top):.1f}" y2="{y(t, top):.1f}"/>'
                          f'<text class="tick" x="{left - 8}" y="{y(t, top) + 4:.1f}" text-anchor="end">{t:,}</text>')
-        parts.append(f'<text class="tick" x="{left - 8}" y="{top - 6}" text-anchor="end">ms</text>')
+        parts.append(f'<text class="tick" x="{left - 8}" y="{top - 12}" text-anchor="end">ms</text>')
         for t in range(0, xhi + 1, 500):
             parts.append(f'<line class="grid" x1="{x(t):.1f}" x2="{x(t):.1f}" y1="{top}" y2="{base}"/>'
                          f'<text class="tick" x="{x(t):.1f}" y="{base + 16}" text-anchor="middle">{t:,}</text>')
