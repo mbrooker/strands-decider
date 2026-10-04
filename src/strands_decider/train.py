@@ -61,6 +61,8 @@ class TrainConfig:
     # 0.368, 0.167 ordinal against 0.833 -- so it is a starting point, not a target.
     head_type: str = "slot"
     pointer_dim: int = 256
+    # "last" or "mean": the pointer query on a causal or encoder-only torso (modeling.py).
+    query_pool: str = "last"
     head_init: str = "random"
     # >0 adds KL(frozen || student) so training cannot drift away from that readout.
     kl_frozen_weight: float = 0.0
@@ -293,6 +295,7 @@ def train(cfg: TrainConfig) -> str:
         kl_frozen_weight=cfg.kl_frozen_weight,
         head_type=cfg.head_type,
         pointer_dim=cfg.pointer_dim,
+        query_pool=cfg.query_pool,
     )
     if cfg.lora_targets:
         model_cfg.lora_targets = list(cfg.lora_targets)

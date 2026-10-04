@@ -68,6 +68,11 @@ class StrandsDeciderConfig:
     # existing checkpoint keeps loading unchanged.
     head_type: str = "slot"
     pointer_dim: int = 256
+    # The pointer query on a causal or encoder-only torso: "last" = the state at the last
+    # real token (`<answer>`); "mean" = the mean over the prompt's real tokens, the better
+    # query for a bidirectional encoder (docs/encoder-design.md, Phase 0). An
+    # encoder-decoder's query is always its decoder's first position.
+    query_pool: str = "last"
     # Populated after `strands-decider calibrate` runs; 1.0 is a no-op. `temperature` is the
     # fallback; `temperature_by_kind` overrides it per primitive where fitted.
     # One global scalar cannot serve all three: noul/choice/score sit at very
@@ -231,6 +236,18 @@ def pool_last_token(hidden_states: torch.Tensor, attention_mask: torch.Tensor) -
     return hidden_states.gather(1, gather_idx).squeeze(1)
 
 
+def mean_pool(hidden_states: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
+    """The mean of each sequence's states over its real tokens, in fp32.
+
+    Only for a sequence forwarded whole: with a shared-prefix cache the states cover only
+    the suffix, so the mean would silently leave the state out (readout_states refuses).
+    """
+    m = attention_mask.to(torch.float32).unsqueeze(-1)
+    if m.size(1) != hidden_states.size(1):
+        raise ValueError("mean pooling needs the whole sequence's states")
+    return (hidden_states.to(torch.float32) * m).sum(1) / m.sum(1).clamp_min(1.0)
+
+
 def masked_log_softmax(logits: torch.Tensor, n_slots: torch.Tensor) -> torch.Tensor:
     """Log-softmax over each row's first `n_slots[i]` entries; masked slots -> -inf.
 
@@ -340,6 +357,15 @@ class StrandsDeciderModel(nn.Module):
             # transformers 5.17 (a mixed-dtype matmul fails); a cast after loading does not.
             torso.to(getattr(torch, config.torch_dtype))
             return torso
+        elif base_cfg.model_type == "t5gemma":
+            # The encoder of a T5Gemma (Gemma 2) encoder-decoder, alone: an encoder-only torso
+            # (docs/encoder-design.md). T5GemmaEncoderModel refuses an encoder-decoder config
+            # in transformers 5.17, so the pair loads and the decoder is dropped.
+            import transformers
+
+            torso = transformers.T5GemmaModel.from_pretrained(config.base_model, **kwargs).encoder
+            torso.to(getattr(torch, config.torch_dtype))
+            return torso
         else:
             torso = AutoModel.from_pretrained(config.base_model, **kwargs)
         torso.config.use_cache = True
@@ -351,6 +377,16 @@ class StrandsDeciderModel(nn.Module):
         encoder, and the decoder's first position, fed only the start token, is the
         query. See docs/bidi-design.md."""
         return bool(getattr(getattr(torso, "config", None), "is_encoder_decoder", False))
+
+    @staticmethod
+    def is_bidirectional(torso: nn.Module) -> bool:
+        """True when a state's representation depends on what follows it: an encoder-decoder,
+        or an encoder-only torso (T5Gemma's encoder, ModernBERT/Ettin). Such a torso cannot
+        share an encoded state across questions through a prefix cache."""
+        cfg = getattr(torso, "config", None)  # a PEFT wrapper forwards this to the base
+        if StrandsDeciderModel.is_encoder_decoder(torso):
+            return True
+        return getattr(cfg, "model_type", None) in {"t5_gemma_module", "modernbert"}
 
     def compile_layers(self) -> int:
         """`torch.compile` each transformer layer of the torso, in place.
@@ -442,7 +478,17 @@ class StrandsDeciderModel(nn.Module):
         keys are masked, so real tokens' states do not move (docs/bidi-design.md, Phase 0).
         """
         if not self.is_encoder_decoder(self.torso):
-            hidden = self.encode(input_ids, attention_mask, past_key_values=past_key_values)
+            if self.is_bidirectional(self.torso):
+                if past_key_values is not None:
+                    raise ValueError("a bidirectional torso has no shared-prefix cache")
+                hidden = self.torso(input_ids=input_ids, attention_mask=attention_mask,
+                                    return_dict=True).last_hidden_state
+            else:
+                hidden = self.encode(input_ids, attention_mask, past_key_values=past_key_values)
+            if self.config.query_pool == "mean":
+                return hidden, mean_pool(hidden, attention_mask)
+            if self.config.query_pool != "last":
+                raise ValueError(f"unknown query_pool {self.config.query_pool!r}")
             return hidden, pool_last_token(hidden, attention_mask).to(torch.float32)
         if past_key_values is not None:
             raise ValueError("an encoder-decoder torso has no shared-prefix cache")
@@ -520,6 +566,9 @@ class StrandsDeciderModel(nn.Module):
         extra forward and no extra weights. Rows needing a slot without a
         single-token number are excluded and reported in the mask.
         """
+        if self.is_bidirectional(self.torso) and not self.is_encoder_decoder(self.torso):
+            raise ValueError("an encoder-only torso has no LM readout to anchor to; "
+                             "set kl_frozen_weight: 0")
         slots = self.slot_token_ids()
         usable = max(slots) + 1 if slots else 0
         eligible = n_slots <= usable

@@ -141,13 +141,15 @@ class SystemOneEngine:
         self.tok = model.tokenizer
         self.device = self.cfg.device
         # Checked per request too (`evaluate`): callers replace `cfg` after construction.
-        self._encoder_decoder = StrandsDeciderModel.is_encoder_decoder(model.torso)
-        if self.cfg.use_prefix_cache and self._encoder_decoder:
-            # A bidirectional encoder reads the state differently for each question, so
-            # a state encoded once is not what training saw: every question re-encodes
-            # it, batched (docs/bidi-design.md#inference).
-            print("[strands-decider] encoder-decoder torso: no shared-prefix cache; "
-                  "questions are encoded with the state, batched")
+        # A bidirectional torso reads the state differently for each question, so a state
+        # encoded once is not what training saw; a mean query needs the whole sequence's
+        # states. Either way every question re-encodes the state, batched
+        # (docs/bidi-design.md#inference, docs/encoder-design.md).
+        self._no_prefix_cache = (StrandsDeciderModel.is_bidirectional(model.torso)
+                                 or getattr(getattr(model, "config", None), "query_pool", "last") != "last")
+        if self.cfg.use_prefix_cache and self._no_prefix_cache:
+            print("[strands-decider] bidirectional torso or mean query: no shared-prefix "
+                  "cache; questions are encoded with the state, batched")
             self.cfg = replace(self.cfg, use_prefix_cache=False)
 
     def _upcast_torso_for_cpu(self) -> None:
@@ -379,7 +381,7 @@ class SystemOneEngine:
             # One question gains nothing from a shared prefix and pays a second forward:
             # measured on JevBench (one question per task), p50 0.111 s batched, 0.204 s
             # through the prefix path, with the same answers.
-            if self.cfg.use_prefix_cache and len(chunk_rendered) > 1 and not self._encoder_decoder:
+            if self.cfg.use_prefix_cache and len(chunk_rendered) > 1 and not self._no_prefix_cache:
                 try:
                     probs, ntok = self._slot_probs_shared_prefix(
                         state_text, [rq.text for rq in chunk_rendered], chunk_slots,

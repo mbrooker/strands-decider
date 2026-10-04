@@ -116,7 +116,18 @@ questions.
 
 ## Smoke test (added before e1a trains)
 
-SMOKE
+4 October 2026, RTX 3090, `configs/experiments/e1a.yaml` with `max_steps: 30` (the schedule
+compressed into 30 steps), micro-batch 8 x 4. It loaded the encoder alone: 26 layers
+compiled, 21.96M of 2.636B parameters trainable. The longest batch runs first, so its
+peak, **14.9 GiB allocated (at most 17.6 GB in use on the card)**, is the run's peak. There
+is room beside Windows' own use, so **micro-batch 8 x 4 is kept for both arms.** Speed:
+0.21 steps/s by step 30, compilation included. b1's smoke ran 0.19 at step 40, so the full
+run is *about 4 h*. Loss 2.59 to 1.78 over 30 steps; validation 1.081 / 0.573. A plumbing
+check, not a result.
+
+Code at this preregistration's commit: `query_pool` (mean query), encoder-only loading for
+T5Gemma, and `is_bidirectional`, which keeps every bidirectional torso off the prefix
+cache. Pinned by `tests/test_t5gemma_encoder.py`; the full suite passes (265).
 
 ## Outcome: e1a (added after the run)
 
