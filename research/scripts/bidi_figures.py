@@ -1,6 +1,8 @@
-"""Two figures for hobson-bidi: latency by model (box plots) and accuracy against Brier.
+"""Three figures for hobson-bidi: latency by model (box plots), accuracy against Brier, and
+latency against prompt length for e1b and v19.
 
-    python research/scripts/bidi_figures.py --reports ~/hobson-bidi/reports --out research/figures
+    python research/scripts/bidi_figures.py --reports ~/hobson-bidi/reports --out research/figures \
+        [--jf100 ~/sd_eval/jf100]
 
 Latency is per request, measured on one RTX 3090 under WSL2 in one session, every model served
 with compiled torso layers (`serve --compile`: per-layer torch.compile, warmed up before the
@@ -13,6 +15,11 @@ first request), all in reports/latency_compiled/:
 Accuracy against Brier, two panels: JevBench, each run's recorded result (the preregistrations'
 outcomes); JF100, from each checkpoint's predictions (eval_jf100.py, uncompiled; JF100_PREDS),
 Brier as JevBench defines it.
+
+Latency against prompt length uses the same compiled runs. A JevBench request's length is the
+server's own count (usage.input_tokens); a JF100 request's is computed with the engine's
+tokenisation (SystemOneEngine._fit on the rendered request, the count the server reports), with
+each checkpoint's tokenizer. No model is loaded for it.
 
 Static SVG, no script: light and dark from CSS custom properties under
 prefers-color-scheme; one series colour (palette slot 1, validated on both surfaces);
@@ -28,6 +35,7 @@ import math
 import os
 import statistics
 from html import escape
+from typing import Any
 
 MODELS = [  # (name, torso family, size and kind) - short enough for an 80 px slot
     ("v19", "Qwen3.5", "2B decoder"),
@@ -44,11 +52,11 @@ JEVBENCH = {"v19": (168, 0.342), "b1": (153, 0.411), "b2": (178, 0.287),
 STYLE = """
 <style>
   .viz { --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781; --grid:#e1e0d9;
-         --axis:#c3c2b7; --s1:#2a78d6; --s1-fill:rgba(42,120,214,0.16);
+         --axis:#c3c2b7; --s1:#2a78d6; --s1-fill:rgba(42,120,214,0.16); --s2:#eb6834;
          font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
   @media (prefers-color-scheme: dark) {
     .viz { --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781; --grid:#2c2c2a;
-           --axis:#383835; --s1:#3987e5; --s1-fill:rgba(57,135,229,0.22); }
+           --axis:#383835; --s1:#3987e5; --s1-fill:rgba(57,135,229,0.22); --s2:#d95926; }
   }
   .bg { fill: var(--surface); }
   .title { fill: var(--ink); font-size: 16px; font-weight: 600; }
@@ -68,6 +76,9 @@ STYLE = """
   .dot { fill: var(--s1); stroke: var(--surface); stroke-width: 2; }
   .ring { fill: none; stroke: var(--s1); stroke-width: 1.5; }
   .note { fill: var(--muted); font-size: 11px; }
+  .pt { stroke: var(--surface); stroke-width: 1; fill-opacity: 0.8; }
+  .pt.s1 { fill: var(--s1); } .pt.s2 { fill: var(--s2); }
+  .key.s1 { fill: var(--s1); } .key.s2 { fill: var(--s2); }
 </style>
 """
 
@@ -288,10 +299,131 @@ def scatter_svg(path: str, jf100: dict[str, tuple[int, float]]) -> None:
         fh.write("\n".join(parts) + "\n")
 
 
+LENGTH_MODELS = [("e1b", "s1"), ("v19", "s2")]  # e1b keeps the series colour of the other figures
+
+
+def jf100_prompt_tokens(checkpoint: str, jf100_dir: str) -> dict[tuple[str, int], int]:
+    """Input tokens of every JF100 request (item, trial), as the server would count them."""
+    import sys
+    from types import SimpleNamespace
+
+    from transformers import AutoTokenizer
+
+    from strands_decider.infer import EngineConfig, SystemOneEngine
+    from strands_decider.modeling import StrandsDeciderConfig, checkpoint_dir, config_path
+    from strands_decider.prompting import render_question, render_state
+    from strands_decider.schema import ChoiceQuestion, SystemOneRequest
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from jf100_latency import TRIALS, presented
+
+    path = checkpoint_dir(checkpoint)
+    # Tokenisation only: _fit needs the tokenizer, the window and the engine config, not weights.
+    eng: Any = SystemOneEngine.__new__(SystemOneEngine)
+    eng.tok = AutoTokenizer.from_pretrained(path)
+    eng.cfg = EngineConfig(device="cpu")
+    eng.model = SimpleNamespace(config=StrandsDeciderConfig.from_json(config_path(path)))
+    items = [json.loads(line) for line in open(os.path.join(jf100_dir, "data/items.jsonl"), encoding="utf-8")]
+    out = {}
+    for item in items:
+        for t in range(TRIALS):
+            options, _ = presented(item, t)
+            req = SystemOneRequest(state=item["state"], questions={"answer": ChoiceQuestion(
+                instructions=item["question"], criteria=options)})
+            st, qs = eng._fit(render_state(req.state), [render_question(req.questions["answer"]).text])
+            out[(item["id"], t)] = len(st) + len(qs[0])
+    return out
+
+
+def load_lengths(reports: str, jf100_dir: str) -> dict[str, dict[str, list[tuple[int, float, str]]]]:
+    """(input tokens, latency ms, request) per benchmark and model, from the compiled runs."""
+    root = os.path.join(reports, "latency_compiled")
+    out: dict[str, dict[str, list[tuple[int, float, str]]]] = {"JevBench": {}, "JF100": {}}
+    for m, _ in LENGTH_MODELS:
+        run = os.path.join(root, f"jevbench_{m}")
+        rows = sorted(map(json.loads, open(os.path.join(run, "results.jsonl"), encoding="utf-8")),
+                      key=lambda r: r["ts"])[1:]  # first request dropped, as in the box plot
+        out["JevBench"][m] = [(r["usage"]["input_tokens"], r["latency_s"] * 1000, r["task_id"]) for r in rows]
+        checkpoint = json.load(open(os.path.join(run, "run_meta.json"), encoding="utf-8"))["checkpoint"]
+        tokens = jf100_prompt_tokens(checkpoint, jf100_dir)
+        out["JF100"][m] = [(tokens[(r["item_id"], r["trial"])], r["latency_ms"], f"{r['item_id']} trial {r['trial']}")
+                           for r in map(json.loads, open(os.path.join(root, f"jf100_{m}.jsonl"), encoding="utf-8"))]
+    return out
+
+
+def length_svg(data: dict, path: str) -> None:
+    """Latency against prompt length, JevBench above JF100, one x and one log y scale for both."""
+    W, left, panel_w = 720, 64, 620
+    first_top, plot_h, step = 136, 250, 340
+    H = first_top + step + plot_h + 90
+    pts = [p for bench in data.values() for series in bench.values() for p in series]
+    xhi = math.ceil(max(t for t, _, _ in pts) / 500) * 500
+    ylo, yhi = min(ms for _, ms, _ in pts) * 0.85, max(ms for _, ms, _ in pts) * 1.15
+    yticks = [t for t in (10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000) if ylo <= t <= yhi]
+    names = {m: f"{m} ({t} {k})" for m, t, k in MODELS}
+
+    def x(v: float) -> float:
+        return left + panel_w * v / xhi
+
+    def y(v: float, top: float) -> float:
+        frac = (math.log10(v) - math.log10(ylo)) / (math.log10(yhi) - math.log10(ylo))
+        return top + plot_h * (1 - frac)
+
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+             f'class="viz" role="img" aria-labelledby="t d">', STYLE,
+             '<title id="t">Request latency against prompt length, e1b and v19</title>',
+             '<desc id="d">Scatter of per-request latency (log scale) against input tokens for e1b and v19, '
+             'served with --compile on one RTX 3090. ' + escape("; ".join(
+                 f"{bench} {m}: {len(s)} requests, {min(t for t, _, _ in s)}-{max(t for t, _, _ in s)} tokens, "
+                 f"median {statistics.median(ms for _, ms, _ in s):.0f} ms"
+                 for bench, b in data.items() for m, s in b.items())) + '</desc>',
+             f'<rect class="bg" width="{W}" height="{H}"/>',
+             f'<text class="title" x="{left - 40}" y="30">Request latency against prompt length</text>',
+             f'<text class="sub" x="{left - 40}" y="50">Per request, served with --compile, one RTX 3090 '
+             'under WSL2. Log latency, both panels on one scale.</text>']
+    kx = left - 40
+    for m, cls in LENGTH_MODELS:  # legend
+        parts.append(f'<circle class="key {cls}" cx="{kx + 5}" cy="76" r="5"/>'
+                     f'<text class="sub" x="{kx + 15}" y="80">{escape(names[m])}</text>')
+        kx += 15 + 7.2 * len(names[m]) + 24
+    for p, bench in enumerate(("JevBench", "JF100")):
+        top = first_top + p * step
+        base = top + plot_h
+        how = ("230 tasks over HTTP, first request dropped; tokens as the server counted them"
+               if bench == "JevBench" else "300 requests in process; tokens counted with each model's tokenizer")
+        parts.append(f'<text class="panel" x="{left}" y="{top - 22}">{bench}'
+                     f'<tspan class="sub" dx="6">· {how}</tspan></text>')
+        for t in yticks:
+            parts.append(f'<line class="grid" x1="{left}" x2="{left + panel_w}" y1="{y(t, top):.1f}" y2="{y(t, top):.1f}"/>'
+                         f'<text class="tick" x="{left - 8}" y="{y(t, top) + 4:.1f}" text-anchor="end">{t:,}</text>')
+        parts.append(f'<text class="tick" x="{left - 8}" y="{top - 6}" text-anchor="end">ms</text>')
+        for t in range(0, xhi + 1, 500):
+            parts.append(f'<line class="grid" x1="{x(t):.1f}" x2="{x(t):.1f}" y1="{top}" y2="{base}"/>'
+                         f'<text class="tick" x="{x(t):.1f}" y="{base + 16}" text-anchor="middle">{t:,}</text>')
+        parts.append(f'<line class="axis" x1="{left}" x2="{left + panel_w}" y1="{base}" y2="{base}"/>'
+                     f'<text class="sub" x="{left + panel_w / 2}" y="{base + 36}" text-anchor="middle">'
+                     'Prompt length, input tokens</text>')
+        for m, cls in LENGTH_MODELS[::-1]:  # v19 underneath, the reference on top
+            for tok, ms, req in data[bench][m]:
+                parts.append(f'<circle class="pt {cls}" cx="{x(tok):.1f}" cy="{y(ms, top):.1f}" r="4">'
+                             f'<title>{escape(f"{m} · {req}: {tok:,} tokens, {fmt_ms(ms)} ms")}</title></circle>')
+        for m, _ in LENGTH_MODELS:  # direct label at each series' longest prompt
+            tok, ms, _ = max(data[bench][m])
+            parts.append(f'<text class="name" x="{x(tok) + 9:.1f}" y="{y(ms, top) + 4:.1f}">{m}</text>')
+    parts.append(f'<text class="note" x="{left - 40}" y="{H - 26}">JF100: nine in ten requests are under 400 '
+                 'tokens; 12 fill the 4,096-token window and are truncated to it.</text>'
+                 f'<text class="note" x="{left - 40}" y="{H - 11}">e1b is hobson-bidi\'s reference. '
+                 'Hover a point for its request, length and latency.</text>')
+    parts.append("</svg>")
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write("\n".join(parts) + "\n")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--reports", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--jf100", default=os.path.expanduser("~/sd_eval/jf100"))
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     rows = latency_svg(load_latency(args.reports), os.path.join(args.out, "bidi_latency_box.svg"))
@@ -308,6 +440,14 @@ def main() -> None:
             for m, t, _ in MODELS:
                 a, b = data[m]
                 w.writerow([bench, m, t, a, n, round(a / n, 4), b])
+    lengths = load_lengths(args.reports, args.jf100)
+    length_svg(lengths, os.path.join(args.out, "bidi_latency_length.svg"))
+    with open(os.path.join(args.out, "bidi_latency_length.csv"), "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["benchmark", "model", "request", "input_tokens", "latency_ms"])
+        for bench, by_model in lengths.items():
+            for m, series in by_model.items():
+                w.writerows([bench, m, req, tok, round(ms, 2)] for tok, ms, req in series)
     for r in rows:
         print(f"{r['benchmark']:9} {r['model']:4} median {r['median']:7.1f}  p95 {r['p95']:7.1f}  n {r['n']}")
 

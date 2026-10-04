@@ -2,11 +2,11 @@
 
 <style>
   .viz { --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781; --grid:#e1e0d9;
-         --axis:#c3c2b7; --s1:#2a78d6; --s1-fill:rgba(42,120,214,0.16);
+         --axis:#c3c2b7; --s1:#2a78d6; --s1-fill:rgba(42,120,214,0.16); --s2:#eb6834;
          font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
   @media (prefers-color-scheme: dark) {
     .viz { --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781; --grid:#2c2c2a;
-           --axis:#383835; --s1:#3987e5; --s1-fill:rgba(57,135,229,0.22); }
+           --axis:#383835; --s1:#3987e5; --s1-fill:rgba(57,135,229,0.22); --s2:#d95926; }
   }
   .bg { fill: var(--surface); }
   .title { fill: var(--ink); font-size: 16px; font-weight: 600; }
@@ -26,6 +26,9 @@
   .dot { fill: var(--s1); stroke: var(--surface); stroke-width: 2; }
   .ring { fill: none; stroke: var(--s1); stroke-width: 1.5; }
   .note { fill: var(--muted); font-size: 11px; }
+  .pt { stroke: var(--surface); stroke-width: 1; fill-opacity: 0.8; }
+  .pt.s1 { fill: var(--s1); } .pt.s2 { fill: var(--s2); }
+  .key.s1 { fill: var(--s1); } .key.s2 { fill: var(--s2); }
 </style>
 
 <title id="t">Accuracy against Brier score, JevBench and JF100</title>

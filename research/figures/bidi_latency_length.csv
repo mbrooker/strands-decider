@@ -1,0 +1,1061 @@
+benchmark,model,request,input_tokens,latency_ms
+JevBench,e1b,original-policy-01-1,127,76.77
+JevBench,e1b,original-policy-02-0,113,52.75
+JevBench,e1b,original-policy-02-1,112,53.21
+JevBench,e1b,original-policy-03-0,114,36.37
+JevBench,e1b,original-policy-03-1,115,36.32
+JevBench,e1b,original-policy-04-0,121,36.16
+JevBench,e1b,original-policy-04-1,117,33.1
+JevBench,e1b,original-policy-05-0,125,35.56
+JevBench,e1b,original-policy-05-1,117,34.67
+JevBench,e1b,original-policy-06-0,126,34.07
+JevBench,e1b,original-policy-06-1,118,35.13
+JevBench,e1b,original-intent-01-0,114,35.25
+JevBench,e1b,original-intent-01-1,115,34.45
+JevBench,e1b,original-intent-02-0,115,34.0
+JevBench,e1b,original-intent-02-1,114,35.59
+JevBench,e1b,original-intent-03-0,116,35.62
+JevBench,e1b,original-intent-03-1,114,32.98
+JevBench,e1b,original-intent-04-0,118,33.45
+JevBench,e1b,original-intent-04-1,114,34.88
+JevBench,e1b,original-intent-05-0,114,32.65
+JevBench,e1b,original-intent-05-1,113,32.88
+JevBench,e1b,original-intent-06-0,112,32.28
+JevBench,e1b,original-intent-06-1,117,33.44
+JevBench,e1b,original-ordinal-01-0,130,38.52
+JevBench,e1b,original-ordinal-01-1,131,38.2
+JevBench,e1b,original-ordinal-02-0,134,36.82
+JevBench,e1b,original-ordinal-02-1,135,36.49
+JevBench,e1b,original-ordinal-03-0,131,35.01
+JevBench,e1b,original-ordinal-03-1,133,35.86
+JevBench,e1b,original-ordinal-04-0,132,39.57
+JevBench,e1b,original-ordinal-04-1,132,32.99
+JevBench,e1b,original-ordinal-05-0,136,39.18
+JevBench,e1b,original-ordinal-05-1,135,38.99
+JevBench,e1b,original-ordinal-06-0,137,33.92
+JevBench,e1b,original-ordinal-06-1,143,32.54
+JevBench,e1b,original-extraction-01-0,102,38.51
+JevBench,e1b,original-extraction-01-1,104,33.17
+JevBench,e1b,original-extraction-02-0,105,36.02
+JevBench,e1b,original-extraction-02-1,104,36.06
+JevBench,e1b,original-extraction-03-0,108,32.82
+JevBench,e1b,original-extraction-03-1,107,32.44
+JevBench,e1b,original-extraction-04-0,104,31.83
+JevBench,e1b,original-extraction-04-1,102,34.17
+JevBench,e1b,original-extraction-05-0,105,38.97
+JevBench,e1b,original-extraction-05-1,101,32.63
+JevBench,e1b,original-extraction-06-0,105,31.81
+JevBench,e1b,original-extraction-06-1,103,38.04
+JevBench,e1b,original-adequacy-01-0,106,32.74
+JevBench,e1b,original-adequacy-01-1,102,32.59
+JevBench,e1b,original-adequacy-02-0,104,33.03
+JevBench,e1b,original-adequacy-02-1,104,33.45
+JevBench,e1b,original-adequacy-03-0,106,31.86
+JevBench,e1b,original-adequacy-03-1,110,33.14
+JevBench,e1b,original-adequacy-04-0,110,31.5
+JevBench,e1b,original-adequacy-04-1,107,31.25
+JevBench,e1b,original-adequacy-05-0,99,34.47
+JevBench,e1b,original-adequacy-05-1,100,32.46
+JevBench,e1b,original-adequacy-06-0,117,31.69
+JevBench,e1b,original-adequacy-06-1,116,32.87
+JevBench,e1b,original-routing-01-0,148,32.96
+JevBench,e1b,original-routing-01-1,143,32.12
+JevBench,e1b,original-routing-02-0,148,31.35
+JevBench,e1b,original-routing-02-1,143,32.86
+JevBench,e1b,original-routing-03-0,148,32.5
+JevBench,e1b,original-routing-03-1,150,34.25
+JevBench,e1b,original-routing-04-0,144,34.88
+JevBench,e1b,original-routing-04-1,143,32.05
+JevBench,e1b,original-routing-05-0,145,31.9
+JevBench,e1b,original-routing-05-1,145,36.0
+JevBench,e1b,original-routing-06-0,143,31.27
+JevBench,e1b,original-routing-06-1,143,38.05
+JevBench,e1b,easy-intent-00,140,33.73
+JevBench,e1b,easy-intent-01,140,33.19
+JevBench,e1b,easy-intent-02,142,32.22
+JevBench,e1b,easy-intent-03,131,32.35
+JevBench,e1b,easy-intent-04,136,35.5
+JevBench,e1b,easy-intent-05,135,31.91
+JevBench,e1b,easy-intent-06,127,31.56
+JevBench,e1b,easy-intent-07,120,33.68
+JevBench,e1b,easy-intent-08,122,34.17
+JevBench,e1b,easy-intent-09,126,33.38
+JevBench,e1b,easy-intent-10,123,32.64
+JevBench,e1b,easy-intent-11,123,31.44
+JevBench,e1b,easy-fact-00,104,31.48
+JevBench,e1b,easy-fact-01,102,33.52
+JevBench,e1b,easy-fact-02,110,32.03
+JevBench,e1b,easy-fact-03,113,32.49
+JevBench,e1b,easy-fact-04,100,31.99
+JevBench,e1b,easy-fact-05,101,31.36
+JevBench,e1b,easy-fact-06,123,31.8
+JevBench,e1b,easy-fact-07,98,32.48
+JevBench,e1b,easy-fact-08,96,33.87
+JevBench,e1b,easy-fact-09,96,31.46
+JevBench,e1b,easy-fact-10,103,33.12
+JevBench,e1b,easy-fact-11,104,32.26
+JevBench,e1b,easy-extraction-00,91,31.76
+JevBench,e1b,easy-extraction-01,94,34.41
+JevBench,e1b,easy-extraction-02,94,32.93
+JevBench,e1b,easy-extraction-03,91,32.27
+JevBench,e1b,easy-extraction-04,90,32.06
+JevBench,e1b,easy-extraction-05,90,33.46
+JevBench,e1b,easy-extraction-06,84,32.13
+JevBench,e1b,easy-extraction-07,82,31.99
+JevBench,e1b,easy-extraction-08,89,32.81
+JevBench,e1b,easy-extraction-09,91,33.95
+JevBench,e1b,easy-extraction-10,86,37.0
+JevBench,e1b,easy-extraction-11,97,31.3
+JevBench,e1b,easy-tool_selection-00,131,36.59
+JevBench,e1b,easy-tool_selection-01,132,36.07
+JevBench,e1b,easy-tool_selection-02,134,32.44
+JevBench,e1b,easy-tool_selection-03,132,32.95
+JevBench,e1b,easy-tool_selection-04,128,32.64
+JevBench,e1b,easy-tool_selection-05,134,31.6
+JevBench,e1b,easy-tool_selection-06,133,34.12
+JevBench,e1b,easy-tool_selection-07,134,33.12
+JevBench,e1b,easy-tool_selection-08,131,35.08
+JevBench,e1b,easy-tool_selection-09,130,31.22
+JevBench,e1b,easy-tool_selection-10,129,31.75
+JevBench,e1b,easy-tool_selection-11,131,31.24
+JevBench,e1b,hard-opus-a-long_policy-01,3874,382.81
+JevBench,e1b,hard-opus-a-long_policy-04,2594,243.99
+JevBench,e1b,hard-opus-a-long_policy-08,2340,217.98
+JevBench,e1b,hard-opus-a-long_policy-09,2501,223.55
+JevBench,e1b,hard-opus-a-long_policy-11,2346,217.13
+JevBench,e1b,hard-opus-a-long_policy-13,2391,218.85
+JevBench,e1b,hard-opus-a-long_policy-17,2378,217.5
+JevBench,e1b,hard-opus-a-long_policy-19,2296,198.1
+JevBench,e1b,hard-opus-a-probability-03,439,46.25
+JevBench,e1b,hard-opus-a-probability-04,1094,91.47
+JevBench,e1b,hard-opus-a-probability-07,1189,109.48
+JevBench,e1b,hard-opus-a-probability-08,396,45.87
+JevBench,e1b,hard-opus-a-temporal_numeric-03,501,47.55
+JevBench,e1b,hard-opus-a-temporal_numeric-06,522,56.38
+JevBench,e1b,hard-opus-a-temporal_numeric-07,1302,116.73
+JevBench,e1b,hard-opus-a-temporal_numeric-09,524,56.42
+JevBench,e1b,hard-opus-a-temporal_numeric-12,603,61.53
+JevBench,e1b,hard-opus-b-ambiguous-02,546,57.0
+JevBench,e1b,hard-opus-b-ambiguous-03,490,46.86
+JevBench,e1b,hard-opus-b-ambiguous-07,487,47.01
+JevBench,e1b,hard-opus-b-ambiguous-09,642,65.43
+JevBench,e1b,hard-opus-b-ambiguous-10,581,60.96
+JevBench,e1b,hard-opus-b-ambiguous-11,460,46.52
+JevBench,e1b,hard-opus-b-ambiguous-13,617,61.83
+JevBench,e1b,hard-opus-b-multi_hop-03,2922,273.51
+JevBench,e1b,hard-opus-b-multi_hop-04,2420,219.5
+JevBench,e1b,hard-opus-b-multi_hop-05,2559,224.6
+JevBench,e1b,hard-opus-b-multi_hop-07,2694,256.84
+JevBench,e1b,hard-opus-b-multi_hop-08,2366,216.74
+JevBench,e1b,hard-opus-b-probability-01,1983,180.78
+JevBench,e1b,hard-opus-b-probability-02,495,47.2
+JevBench,e1b,hard-opus-b-probability-03,1188,109.86
+JevBench,e1b,hard-opus-b-probability-04,584,60.75
+JevBench,e1b,hard-opus-b-probability-06,983,89.44
+JevBench,e1b,hard-opus-b-tradeoff-01,851,82.68
+JevBench,e1b,hard-opus-b-tradeoff-03,753,69.19
+JevBench,e1b,hard-opus-b-tradeoff-06,797,82.12
+JevBench,e1b,hard-opus-b-tradeoff-07,734,67.41
+JevBench,e1b,hard-opus-b-tradeoff-08,615,60.99
+JevBench,e1b,hard-opus-b-tradeoff-12,596,61.8
+JevBench,e1b,hard-opus-c-long_policy-02,3569,346.56
+JevBench,e1b,hard-opus-c-long_policy-03,3447,318.54
+JevBench,e1b,hard-opus-c-long_policy-04,3228,301.61
+JevBench,e1b,hard-opus-c-long_policy-05,3326,312.25
+JevBench,e1b,hard-opus-c-long_policy-08,3293,308.63
+JevBench,e1b,hard-opus-c-long_policy-10,3593,356.41
+JevBench,e1b,hard-opus-c-long_policy-11,3338,316.76
+JevBench,e1b,hard-opus-c-probability-03,550,57.23
+JevBench,e1b,hard-opus-c-temporal_numeric-02,935,87.58
+JevBench,e1b,hard-opus-c-temporal_numeric-03,862,84.7
+JevBench,e1b,hard-opus-c-temporal_numeric-04,778,81.35
+JevBench,e1b,hard-opus-c-temporal_numeric-06,978,89.09
+JevBench,e1b,hard-opus-c-temporal_numeric-08,961,89.87
+JevBench,e1b,hard-opus-c-temporal_numeric-12,827,83.71
+JevBench,e1b,hard-sol-a-adversarial-01,305,37.44
+JevBench,e1b,hard-sol-a-adversarial-06,254,32.1
+JevBench,e1b,hard-sol-a-adversarial-07,304,37.33
+JevBench,e1b,hard-sol-a-adversarial-08,233,32.75
+JevBench,e1b,hard-sol-a-adversarial-09,247,34.55
+JevBench,e1b,hard-sol-a-adversarial-11,308,37.64
+JevBench,e1b,hard-sol-a-multi_hop-01,2730,259.51
+JevBench,e1b,hard-sol-a-multi_hop-02,2750,258.84
+JevBench,e1b,hard-sol-a-multi_hop-05,2674,248.3
+JevBench,e1b,hard-sol-a-multi_hop-07,2647,246.39
+JevBench,e1b,hard-sol-a-multi_hop-08,2629,251.21
+JevBench,e1b,hard-sol-a-multi_hop-09,2649,247.88
+JevBench,e1b,hard-sol-a-multi_hop-10,2712,258.24
+JevBench,e1b,hard-sol-a-multi_hop-12,2669,248.62
+JevBench,e1b,hard-sol-a-trap-02,303,38.14
+JevBench,e1b,hard-sol-a-trap-04,213,33.63
+JevBench,e1b,hard-sol-a-trap-05,359,41.93
+JevBench,e1b,hard-sol-a-trap-06,362,42.17
+JevBench,e1b,hard-sol-a-trap-08,285,37.03
+JevBench,e1b,hard-sol-a-trap-10,216,35.33
+JevBench,e1b,hard-sol-a-trap-13,221,36.45
+JevBench,e1b,hard-sol-a-trap-15,321,37.32
+JevBench,e1b,hard-sol-b-judge_hard-01,312,37.58
+JevBench,e1b,hard-sol-b-judge_hard-02,232,31.69
+JevBench,e1b,hard-sol-b-judge_hard-05,264,36.06
+JevBench,e1b,hard-sol-b-judge_hard-08,232,32.58
+JevBench,e1b,hard-sol-b-judge_hard-10,253,33.15
+JevBench,e1b,hard-sol-b-judge_hard-14,273,37.3
+JevBench,e1b,hard-sol-b-judge_hard-15,224,31.98
+JevBench,e1b,hard-sol-b-judge_hard-18,196,36.28
+JevBench,e1b,hard-sol-b-long_policy-01,2722,259.14
+JevBench,e1b,hard-sol-b-long_policy-02,2580,245.83
+JevBench,e1b,hard-sol-b-long_policy-05,2528,225.59
+JevBench,e1b,hard-sol-b-long_policy-06,2604,245.97
+JevBench,e1b,hard-sol-b-routing_hard-01,346,38.12
+JevBench,e1b,hard-sol-b-routing_hard-02,322,37.59
+JevBench,e1b,hard-sol-b-routing_hard-03,327,37.54
+JevBench,e1b,hard-sol-b-routing_hard-07,304,39.23
+JevBench,e1b,hard-sol-b-routing_hard-09,319,38.16
+JevBench,e1b,hard-sol-b-temporal_numeric-01,307,37.12
+JevBench,e1b,hard-sol-b-temporal_numeric-02,318,37.82
+JevBench,e1b,hard-sol-b-temporal_numeric-03,250,33.23
+JevBench,e1b,hard-sol-b-temporal_numeric-04,260,36.88
+JevBench,e1b,hard-sol-c-judge_hard-03,446,46.7
+JevBench,e1b,hard-sol-c-judge_hard-05,375,42.41
+JevBench,e1b,hard-sol-c-judge_hard-07,345,37.31
+JevBench,e1b,hard-sol-c-judge_hard-08,344,38.81
+JevBench,e1b,hard-sol-c-judge_hard-09,369,42.27
+JevBench,e1b,hard-sol-c-judge_hard-10,395,45.07
+JevBench,e1b,hard-sol-c-judge_hard-11,376,41.96
+JevBench,e1b,hard-sol-c-judge_hard-13,359,42.57
+JevBench,e1b,hard-sol-c-judge_hard-15,312,37.33
+JevBench,e1b,hard-sol-c-multi_hop-07,2575,243.91
+JevBench,e1b,hard-sol-c-multi_hop-09,2612,244.93
+JevBench,e1b,hard-sol-c-multi_hop-11,2679,249.37
+JevBench,e1b,hard-sol-c-multi_hop-12,555,58.27
+JevBench,e1b,hard-sol-c-multi_hop-13,2643,250.58
+JevBench,v19,original-policy-01-1,128,69.7
+JevBench,v19,original-policy-02-0,114,65.11
+JevBench,v19,original-policy-02-1,113,70.63
+JevBench,v19,original-policy-03-0,116,69.08
+JevBench,v19,original-policy-03-1,115,68.19
+JevBench,v19,original-policy-04-0,122,72.29
+JevBench,v19,original-policy-04-1,119,65.73
+JevBench,v19,original-policy-05-0,126,74.95
+JevBench,v19,original-policy-05-1,118,62.34
+JevBench,v19,original-policy-06-0,128,62.69
+JevBench,v19,original-policy-06-1,118,57.04
+JevBench,v19,original-intent-01-0,113,60.95
+JevBench,v19,original-intent-01-1,114,61.52
+JevBench,v19,original-intent-02-0,114,59.38
+JevBench,v19,original-intent-02-1,113,66.55
+JevBench,v19,original-intent-03-0,115,65.79
+JevBench,v19,original-intent-03-1,113,65.39
+JevBench,v19,original-intent-04-0,118,67.0
+JevBench,v19,original-intent-04-1,113,68.39
+JevBench,v19,original-intent-05-0,113,76.27
+JevBench,v19,original-intent-05-1,112,70.66
+JevBench,v19,original-intent-06-0,111,63.12
+JevBench,v19,original-intent-06-1,116,61.49
+JevBench,v19,original-ordinal-01-0,131,67.7
+JevBench,v19,original-ordinal-01-1,132,60.56
+JevBench,v19,original-ordinal-02-0,135,70.29
+JevBench,v19,original-ordinal-02-1,136,64.25
+JevBench,v19,original-ordinal-03-0,132,60.28
+JevBench,v19,original-ordinal-03-1,134,61.19
+JevBench,v19,original-ordinal-04-0,134,60.44
+JevBench,v19,original-ordinal-04-1,133,62.39
+JevBench,v19,original-ordinal-05-0,137,70.44
+JevBench,v19,original-ordinal-05-1,136,65.38
+JevBench,v19,original-ordinal-06-0,137,64.93
+JevBench,v19,original-ordinal-06-1,144,60.28
+JevBench,v19,original-extraction-01-0,102,62.48
+JevBench,v19,original-extraction-01-1,104,66.42
+JevBench,v19,original-extraction-02-0,105,64.17
+JevBench,v19,original-extraction-02-1,104,60.67
+JevBench,v19,original-extraction-03-0,108,63.56
+JevBench,v19,original-extraction-03-1,107,59.65
+JevBench,v19,original-extraction-04-0,105,61.1
+JevBench,v19,original-extraction-04-1,102,62.71
+JevBench,v19,original-extraction-05-0,105,61.11
+JevBench,v19,original-extraction-05-1,101,64.63
+JevBench,v19,original-extraction-06-0,105,72.44
+JevBench,v19,original-extraction-06-1,104,65.6
+JevBench,v19,original-adequacy-01-0,107,60.41
+JevBench,v19,original-adequacy-01-1,103,62.5
+JevBench,v19,original-adequacy-02-0,104,61.31
+JevBench,v19,original-adequacy-02-1,105,63.19
+JevBench,v19,original-adequacy-03-0,107,60.89
+JevBench,v19,original-adequacy-03-1,111,62.52
+JevBench,v19,original-adequacy-04-0,111,59.16
+JevBench,v19,original-adequacy-04-1,108,59.06
+JevBench,v19,original-adequacy-05-0,100,64.32
+JevBench,v19,original-adequacy-05-1,101,60.99
+JevBench,v19,original-adequacy-06-0,116,61.07
+JevBench,v19,original-adequacy-06-1,118,61.75
+JevBench,v19,original-routing-01-0,143,67.59
+JevBench,v19,original-routing-01-1,139,65.0
+JevBench,v19,original-routing-02-0,144,65.15
+JevBench,v19,original-routing-02-1,138,67.56
+JevBench,v19,original-routing-03-0,143,63.67
+JevBench,v19,original-routing-03-1,145,62.0
+JevBench,v19,original-routing-04-0,139,63.99
+JevBench,v19,original-routing-04-1,138,64.52
+JevBench,v19,original-routing-05-0,140,60.34
+JevBench,v19,original-routing-05-1,140,60.44
+JevBench,v19,original-routing-06-0,139,62.39
+JevBench,v19,original-routing-06-1,138,62.27
+JevBench,v19,easy-intent-00,133,66.26
+JevBench,v19,easy-intent-01,133,63.26
+JevBench,v19,easy-intent-02,136,61.86
+JevBench,v19,easy-intent-03,125,61.02
+JevBench,v19,easy-intent-04,130,60.0
+JevBench,v19,easy-intent-05,129,60.2
+JevBench,v19,easy-intent-06,121,60.63
+JevBench,v19,easy-intent-07,114,59.97
+JevBench,v19,easy-intent-08,116,60.31
+JevBench,v19,easy-intent-09,119,63.19
+JevBench,v19,easy-intent-10,117,58.79
+JevBench,v19,easy-intent-11,117,59.85
+JevBench,v19,easy-fact-00,105,60.72
+JevBench,v19,easy-fact-01,103,61.79
+JevBench,v19,easy-fact-02,111,63.54
+JevBench,v19,easy-fact-03,114,64.46
+JevBench,v19,easy-fact-04,103,61.23
+JevBench,v19,easy-fact-05,104,61.85
+JevBench,v19,easy-fact-06,124,64.95
+JevBench,v19,easy-fact-07,99,60.37
+JevBench,v19,easy-fact-08,95,62.86
+JevBench,v19,easy-fact-09,95,63.95
+JevBench,v19,easy-fact-10,104,62.28
+JevBench,v19,easy-fact-11,105,59.68
+JevBench,v19,easy-extraction-00,89,61.95
+JevBench,v19,easy-extraction-01,91,60.06
+JevBench,v19,easy-extraction-02,92,68.09
+JevBench,v19,easy-extraction-03,93,60.62
+JevBench,v19,easy-extraction-04,91,59.42
+JevBench,v19,easy-extraction-05,91,60.54
+JevBench,v19,easy-extraction-06,84,60.33
+JevBench,v19,easy-extraction-07,82,61.22
+JevBench,v19,easy-extraction-08,91,62.87
+JevBench,v19,easy-extraction-09,93,63.11
+JevBench,v19,easy-extraction-10,89,61.08
+JevBench,v19,easy-extraction-11,95,64.61
+JevBench,v19,easy-tool_selection-00,124,64.07
+JevBench,v19,easy-tool_selection-01,125,60.54
+JevBench,v19,easy-tool_selection-02,128,60.01
+JevBench,v19,easy-tool_selection-03,126,64.7
+JevBench,v19,easy-tool_selection-04,122,63.32
+JevBench,v19,easy-tool_selection-05,128,61.11
+JevBench,v19,easy-tool_selection-06,132,61.69
+JevBench,v19,easy-tool_selection-07,132,73.29
+JevBench,v19,easy-tool_selection-08,131,67.8
+JevBench,v19,easy-tool_selection-09,128,70.46
+JevBench,v19,easy-tool_selection-10,128,59.64
+JevBench,v19,easy-tool_selection-11,131,59.86
+JevBench,v19,hard-opus-a-long_policy-01,3936,310.54
+JevBench,v19,hard-opus-a-long_policy-04,2628,191.43
+JevBench,v19,hard-opus-a-long_policy-08,2402,161.77
+JevBench,v19,hard-opus-a-long_policy-09,2530,167.86
+JevBench,v19,hard-opus-a-long_policy-11,2349,159.69
+JevBench,v19,hard-opus-a-long_policy-13,2441,164.48
+JevBench,v19,hard-opus-a-long_policy-17,2363,163.45
+JevBench,v19,hard-opus-a-long_policy-19,2340,162.4
+JevBench,v19,hard-opus-a-probability-03,444,64.57
+JevBench,v19,hard-opus-a-probability-04,1107,83.83
+JevBench,v19,hard-opus-a-probability-07,1221,89.55
+JevBench,v19,hard-opus-a-probability-08,406,73.13
+JevBench,v19,hard-opus-a-temporal_numeric-03,502,76.08
+JevBench,v19,hard-opus-a-temporal_numeric-06,537,67.25
+JevBench,v19,hard-opus-a-temporal_numeric-07,1308,107.01
+JevBench,v19,hard-opus-a-temporal_numeric-09,534,61.84
+JevBench,v19,hard-opus-a-temporal_numeric-12,607,63.21
+JevBench,v19,hard-opus-b-ambiguous-02,543,64.47
+JevBench,v19,hard-opus-b-ambiguous-03,497,62.82
+JevBench,v19,hard-opus-b-ambiguous-07,500,61.11
+JevBench,v19,hard-opus-b-ambiguous-09,638,63.77
+JevBench,v19,hard-opus-b-ambiguous-10,565,62.66
+JevBench,v19,hard-opus-b-ambiguous-11,467,59.89
+JevBench,v19,hard-opus-b-ambiguous-13,605,61.99
+JevBench,v19,hard-opus-b-multi_hop-03,2968,209.87
+JevBench,v19,hard-opus-b-multi_hop-04,2352,160.42
+JevBench,v19,hard-opus-b-multi_hop-05,2603,190.57
+JevBench,v19,hard-opus-b-multi_hop-07,2647,194.05
+JevBench,v19,hard-opus-b-multi_hop-08,2327,162.45
+JevBench,v19,hard-opus-b-probability-01,1922,139.1
+JevBench,v19,hard-opus-b-probability-02,503,69.98
+JevBench,v19,hard-opus-b-probability-03,1228,88.44
+JevBench,v19,hard-opus-b-probability-04,605,60.99
+JevBench,v19,hard-opus-b-probability-06,1022,80.82
+JevBench,v19,hard-opus-b-tradeoff-01,845,76.04
+JevBench,v19,hard-opus-b-tradeoff-03,763,64.8
+JevBench,v19,hard-opus-b-tradeoff-06,805,78.29
+JevBench,v19,hard-opus-b-tradeoff-07,723,63.27
+JevBench,v19,hard-opus-b-tradeoff-08,616,63.25
+JevBench,v19,hard-opus-b-tradeoff-12,598,65.22
+JevBench,v19,hard-opus-c-long_policy-02,3588,240.82
+JevBench,v19,hard-opus-c-long_policy-03,3513,236.04
+JevBench,v19,hard-opus-c-long_policy-04,3327,221.94
+JevBench,v19,hard-opus-c-long_policy-05,3259,216.4
+JevBench,v19,hard-opus-c-long_policy-08,3263,218.2
+JevBench,v19,hard-opus-c-long_policy-10,3638,241.14
+JevBench,v19,hard-opus-c-long_policy-11,3414,226.14
+JevBench,v19,hard-opus-c-probability-03,553,64.3
+JevBench,v19,hard-opus-c-temporal_numeric-02,951,81.07
+JevBench,v19,hard-opus-c-temporal_numeric-03,874,77.34
+JevBench,v19,hard-opus-c-temporal_numeric-04,789,81.13
+JevBench,v19,hard-opus-c-temporal_numeric-06,992,83.32
+JevBench,v19,hard-opus-c-temporal_numeric-08,993,83.64
+JevBench,v19,hard-opus-c-temporal_numeric-12,827,78.67
+JevBench,v19,hard-sol-a-adversarial-01,287,75.01
+JevBench,v19,hard-sol-a-adversarial-06,256,81.88
+JevBench,v19,hard-sol-a-adversarial-07,303,80.74
+JevBench,v19,hard-sol-a-adversarial-08,233,66.84
+JevBench,v19,hard-sol-a-adversarial-09,247,66.75
+JevBench,v19,hard-sol-a-adversarial-11,308,64.27
+JevBench,v19,hard-sol-a-multi_hop-01,2717,200.65
+JevBench,v19,hard-sol-a-multi_hop-02,2765,190.69
+JevBench,v19,hard-sol-a-multi_hop-05,2677,200.11
+JevBench,v19,hard-sol-a-multi_hop-07,2658,192.37
+JevBench,v19,hard-sol-a-multi_hop-08,2628,188.94
+JevBench,v19,hard-sol-a-multi_hop-09,2642,186.5
+JevBench,v19,hard-sol-a-multi_hop-10,2706,188.56
+JevBench,v19,hard-sol-a-multi_hop-12,2653,198.01
+JevBench,v19,hard-sol-a-trap-02,307,61.14
+JevBench,v19,hard-sol-a-trap-04,213,73.82
+JevBench,v19,hard-sol-a-trap-05,358,70.68
+JevBench,v19,hard-sol-a-trap-06,355,72.01
+JevBench,v19,hard-sol-a-trap-08,282,63.78
+JevBench,v19,hard-sol-a-trap-10,209,65.87
+JevBench,v19,hard-sol-a-trap-13,221,65.01
+JevBench,v19,hard-sol-a-trap-15,323,63.53
+JevBench,v19,hard-sol-b-judge_hard-01,309,64.04
+JevBench,v19,hard-sol-b-judge_hard-02,233,61.19
+JevBench,v19,hard-sol-b-judge_hard-05,253,59.55
+JevBench,v19,hard-sol-b-judge_hard-08,235,59.34
+JevBench,v19,hard-sol-b-judge_hard-10,254,60.97
+JevBench,v19,hard-sol-b-judge_hard-14,271,60.28
+JevBench,v19,hard-sol-b-judge_hard-15,227,62.58
+JevBench,v19,hard-sol-b-judge_hard-18,195,65.9
+JevBench,v19,hard-sol-b-long_policy-01,2745,198.27
+JevBench,v19,hard-sol-b-long_policy-02,2596,192.29
+JevBench,v19,hard-sol-b-long_policy-05,2557,161.18
+JevBench,v19,hard-sol-b-long_policy-06,2640,184.27
+JevBench,v19,hard-sol-b-routing_hard-01,337,60.71
+JevBench,v19,hard-sol-b-routing_hard-02,320,61.79
+JevBench,v19,hard-sol-b-routing_hard-03,318,60.46
+JevBench,v19,hard-sol-b-routing_hard-07,301,63.04
+JevBench,v19,hard-sol-b-routing_hard-09,307,59.03
+JevBench,v19,hard-sol-b-temporal_numeric-01,300,62.09
+JevBench,v19,hard-sol-b-temporal_numeric-02,313,59.53
+JevBench,v19,hard-sol-b-temporal_numeric-03,252,65.31
+JevBench,v19,hard-sol-b-temporal_numeric-04,262,62.45
+JevBench,v19,hard-sol-c-judge_hard-03,416,60.75
+JevBench,v19,hard-sol-c-judge_hard-05,378,60.94
+JevBench,v19,hard-sol-c-judge_hard-07,342,74.34
+JevBench,v19,hard-sol-c-judge_hard-08,337,82.36
+JevBench,v19,hard-sol-c-judge_hard-09,367,77.85
+JevBench,v19,hard-sol-c-judge_hard-10,396,84.48
+JevBench,v19,hard-sol-c-judge_hard-11,367,88.54
+JevBench,v19,hard-sol-c-judge_hard-13,357,73.71
+JevBench,v19,hard-sol-c-judge_hard-15,312,71.48
+JevBench,v19,hard-sol-c-multi_hop-07,2534,189.83
+JevBench,v19,hard-sol-c-multi_hop-09,2553,198.64
+JevBench,v19,hard-sol-c-multi_hop-11,2631,224.88
+JevBench,v19,hard-sol-c-multi_hop-12,550,73.74
+JevBench,v19,hard-sol-c-multi_hop-13,2602,224.85
+JF100,e1b,customer_service-01a trial 0,92,33.22
+JF100,e1b,customer_service-01a trial 1,92,32.15
+JF100,e1b,customer_service-01a trial 2,92,31.26
+JF100,e1b,customer_service-01b trial 0,97,31.69
+JF100,e1b,customer_service-01b trial 1,97,31.77
+JF100,e1b,customer_service-01b trial 2,97,31.85
+JF100,e1b,customer_service-02a trial 0,129,29.93
+JF100,e1b,customer_service-02a trial 1,129,32.22
+JF100,e1b,customer_service-02a trial 2,129,30.82
+JF100,e1b,customer_service-02b trial 0,131,31.2
+JF100,e1b,customer_service-02b trial 1,131,30.07
+JF100,e1b,customer_service-02b trial 2,131,30.49
+JF100,e1b,customer_service-03a trial 0,137,29.97
+JF100,e1b,customer_service-03a trial 1,137,31.07
+JF100,e1b,customer_service-03a trial 2,137,30.19
+JF100,e1b,customer_service-03b trial 0,142,30.9
+JF100,e1b,customer_service-03b trial 1,142,30.96
+JF100,e1b,customer_service-03b trial 2,142,30.87
+JF100,e1b,customer_service-04a trial 0,122,32.16
+JF100,e1b,customer_service-04a trial 1,122,31.6
+JF100,e1b,customer_service-04a trial 2,122,30.66
+JF100,e1b,customer_service-04b trial 0,122,31.73
+JF100,e1b,customer_service-04b trial 1,122,30.97
+JF100,e1b,customer_service-04b trial 2,122,31.23
+JF100,e1b,customer_service-05a trial 0,122,30.57
+JF100,e1b,customer_service-05a trial 1,122,32.18
+JF100,e1b,customer_service-05a trial 2,122,30.77
+JF100,e1b,customer_service-05b trial 0,128,31.65
+JF100,e1b,customer_service-05b trial 1,128,30.28
+JF100,e1b,customer_service-05b trial 2,128,30.05
+JF100,e1b,policy_rules-01a trial 0,138,29.72
+JF100,e1b,policy_rules-01a trial 1,138,30.54
+JF100,e1b,policy_rules-01a trial 2,138,29.85
+JF100,e1b,policy_rules-01b trial 0,138,29.38
+JF100,e1b,policy_rules-01b trial 1,138,34.21
+JF100,e1b,policy_rules-01b trial 2,138,30.28
+JF100,e1b,policy_rules-02a trial 0,105,30.77
+JF100,e1b,policy_rules-02a trial 1,105,31.12
+JF100,e1b,policy_rules-02a trial 2,105,31.89
+JF100,e1b,policy_rules-02b trial 0,105,31.93
+JF100,e1b,policy_rules-02b trial 1,105,30.6
+JF100,e1b,policy_rules-02b trial 2,105,30.93
+JF100,e1b,policy_rules-03a trial 0,137,30.74
+JF100,e1b,policy_rules-03a trial 1,137,31.88
+JF100,e1b,policy_rules-03a trial 2,137,30.15
+JF100,e1b,policy_rules-03b trial 0,137,29.9
+JF100,e1b,policy_rules-03b trial 1,137,29.42
+JF100,e1b,policy_rules-03b trial 2,137,29.87
+JF100,e1b,policy_rules-04a trial 0,124,32.33
+JF100,e1b,policy_rules-04a trial 1,124,32.01
+JF100,e1b,policy_rules-04a trial 2,124,31.34
+JF100,e1b,policy_rules-04b trial 0,124,30.88
+JF100,e1b,policy_rules-04b trial 1,124,34.36
+JF100,e1b,policy_rules-04b trial 2,124,31.19
+JF100,e1b,policy_rules-05a trial 0,189,30.04
+JF100,e1b,policy_rules-05a trial 1,189,29.88
+JF100,e1b,policy_rules-05a trial 2,189,30.36
+JF100,e1b,policy_rules-05b trial 0,187,31.0
+JF100,e1b,policy_rules-05b trial 1,187,30.4
+JF100,e1b,policy_rules-05b trial 2,187,29.64
+JF100,e1b,discourse-01a trial 0,84,32.85
+JF100,e1b,discourse-01a trial 1,84,30.45
+JF100,e1b,discourse-01a trial 2,84,30.13
+JF100,e1b,discourse-01b trial 0,84,30.41
+JF100,e1b,discourse-01b trial 1,84,30.68
+JF100,e1b,discourse-01b trial 2,84,30.34
+JF100,e1b,discourse-02a trial 0,95,31.12
+JF100,e1b,discourse-02a trial 1,95,30.39
+JF100,e1b,discourse-02a trial 2,95,29.53
+JF100,e1b,discourse-02b trial 0,95,30.58
+JF100,e1b,discourse-02b trial 1,95,30.33
+JF100,e1b,discourse-02b trial 2,95,29.98
+JF100,e1b,discourse-03a trial 0,102,30.81
+JF100,e1b,discourse-03a trial 1,102,30.89
+JF100,e1b,discourse-03a trial 2,102,30.72
+JF100,e1b,discourse-03b trial 0,102,30.45
+JF100,e1b,discourse-03b trial 1,102,31.26
+JF100,e1b,discourse-03b trial 2,102,31.61
+JF100,e1b,discourse-04a trial 0,114,30.75
+JF100,e1b,discourse-04a trial 1,114,30.95
+JF100,e1b,discourse-04a trial 2,114,30.75
+JF100,e1b,discourse-04b trial 0,102,30.6
+JF100,e1b,discourse-04b trial 1,102,30.89
+JF100,e1b,discourse-04b trial 2,102,30.31
+JF100,e1b,discourse-05a trial 0,167,30.9
+JF100,e1b,discourse-05a trial 1,167,30.36
+JF100,e1b,discourse-05a trial 2,167,30.17
+JF100,e1b,discourse-05b trial 0,167,29.79
+JF100,e1b,discourse-05b trial 1,167,28.94
+JF100,e1b,discourse-05b trial 2,167,29.3
+JF100,e1b,formal_logic-01a trial 0,153,30.39
+JF100,e1b,formal_logic-01a trial 1,153,30.63
+JF100,e1b,formal_logic-01a trial 2,153,30.37
+JF100,e1b,formal_logic-01b trial 0,154,30.22
+JF100,e1b,formal_logic-01b trial 1,154,30.5
+JF100,e1b,formal_logic-01b trial 2,154,30.8
+JF100,e1b,formal_logic-02a trial 0,162,29.79
+JF100,e1b,formal_logic-02a trial 1,162,30.13
+JF100,e1b,formal_logic-02a trial 2,162,30.28
+JF100,e1b,formal_logic-02b trial 0,163,30.43
+JF100,e1b,formal_logic-02b trial 1,163,34.31
+JF100,e1b,formal_logic-02b trial 2,163,29.95
+JF100,e1b,formal_logic-03a trial 0,161,30.13
+JF100,e1b,formal_logic-03a trial 1,161,30.49
+JF100,e1b,formal_logic-03a trial 2,161,30.5
+JF100,e1b,formal_logic-03b trial 0,155,30.33
+JF100,e1b,formal_logic-03b trial 1,155,30.12
+JF100,e1b,formal_logic-03b trial 2,155,29.63
+JF100,e1b,formal_logic-04a trial 0,167,29.98
+JF100,e1b,formal_logic-04a trial 1,167,30.21
+JF100,e1b,formal_logic-04a trial 2,167,30.59
+JF100,e1b,formal_logic-04b trial 0,168,31.07
+JF100,e1b,formal_logic-04b trial 1,168,30.39
+JF100,e1b,formal_logic-04b trial 2,168,30.79
+JF100,e1b,formal_logic-05a trial 0,177,31.87
+JF100,e1b,formal_logic-05a trial 1,177,30.47
+JF100,e1b,formal_logic-05a trial 2,177,30.21
+JF100,e1b,formal_logic-05b trial 0,172,30.94
+JF100,e1b,formal_logic-05b trial 1,172,30.46
+JF100,e1b,formal_logic-05b trial 2,172,29.66
+JF100,e1b,relations-01a trial 0,185,30.24
+JF100,e1b,relations-01a trial 1,185,30.25
+JF100,e1b,relations-01a trial 2,185,30.18
+JF100,e1b,relations-01b trial 0,185,30.02
+JF100,e1b,relations-01b trial 1,185,29.93
+JF100,e1b,relations-01b trial 2,185,30.16
+JF100,e1b,relations-02a trial 0,198,30.38
+JF100,e1b,relations-02a trial 1,198,30.05
+JF100,e1b,relations-02a trial 2,198,30.18
+JF100,e1b,relations-02b trial 0,198,30.17
+JF100,e1b,relations-02b trial 1,198,29.5
+JF100,e1b,relations-02b trial 2,198,30.1
+JF100,e1b,relations-03a trial 0,211,32.59
+JF100,e1b,relations-03a trial 1,211,29.96
+JF100,e1b,relations-03a trial 2,211,29.94
+JF100,e1b,relations-03b trial 0,211,29.81
+JF100,e1b,relations-03b trial 1,211,30.75
+JF100,e1b,relations-03b trial 2,211,31.69
+JF100,e1b,relations-04a trial 0,237,30.04
+JF100,e1b,relations-04a trial 1,237,31.16
+JF100,e1b,relations-04a trial 2,237,30.62
+JF100,e1b,relations-04b trial 0,237,31.24
+JF100,e1b,relations-04b trial 1,237,30.66
+JF100,e1b,relations-04b trial 2,237,30.02
+JF100,e1b,relations-05a trial 0,276,34.34
+JF100,e1b,relations-05a trial 1,276,34.47
+JF100,e1b,relations-05a trial 2,276,34.03
+JF100,e1b,relations-05b trial 0,276,34.14
+JF100,e1b,relations-05b trial 1,276,33.85
+JF100,e1b,relations-05b trial 2,276,34.39
+JF100,e1b,mathematics-01a trial 0,91,34.99
+JF100,e1b,mathematics-01a trial 1,91,31.25
+JF100,e1b,mathematics-01a trial 2,91,31.14
+JF100,e1b,mathematics-01b trial 0,91,31.58
+JF100,e1b,mathematics-01b trial 1,91,31.78
+JF100,e1b,mathematics-01b trial 2,91,33.88
+JF100,e1b,mathematics-02a trial 0,107,32.26
+JF100,e1b,mathematics-02a trial 1,107,32.16
+JF100,e1b,mathematics-02a trial 2,107,30.74
+JF100,e1b,mathematics-02b trial 0,108,31.23
+JF100,e1b,mathematics-02b trial 1,108,31.49
+JF100,e1b,mathematics-02b trial 2,108,32.6
+JF100,e1b,mathematics-03a trial 0,104,34.32
+JF100,e1b,mathematics-03a trial 1,104,35.56
+JF100,e1b,mathematics-03a trial 2,104,37.44
+JF100,e1b,mathematics-03b trial 0,104,33.02
+JF100,e1b,mathematics-03b trial 1,104,32.16
+JF100,e1b,mathematics-03b trial 2,104,33.31
+JF100,e1b,mathematics-04a trial 0,103,32.16
+JF100,e1b,mathematics-04a trial 1,103,30.89
+JF100,e1b,mathematics-04a trial 2,103,30.73
+JF100,e1b,mathematics-04b trial 0,103,32.51
+JF100,e1b,mathematics-04b trial 1,103,30.74
+JF100,e1b,mathematics-04b trial 2,103,31.08
+JF100,e1b,mathematics-05a trial 0,140,29.67
+JF100,e1b,mathematics-05a trial 1,140,30.55
+JF100,e1b,mathematics-05a trial 2,140,29.68
+JF100,e1b,mathematics-05b trial 0,139,30.24
+JF100,e1b,mathematics-05b trial 1,139,29.18
+JF100,e1b,mathematics-05b trial 2,139,30.01
+JF100,e1b,temporal-01a trial 0,139,29.7
+JF100,e1b,temporal-01a trial 1,139,30.02
+JF100,e1b,temporal-01a trial 2,139,28.78
+JF100,e1b,temporal-01b trial 0,139,30.8
+JF100,e1b,temporal-01b trial 1,139,29.54
+JF100,e1b,temporal-01b trial 2,139,32.22
+JF100,e1b,temporal-02a trial 0,143,29.92
+JF100,e1b,temporal-02a trial 1,143,29.94
+JF100,e1b,temporal-02a trial 2,143,30.42
+JF100,e1b,temporal-02b trial 0,143,29.67
+JF100,e1b,temporal-02b trial 1,143,32.62
+JF100,e1b,temporal-02b trial 2,143,30.48
+JF100,e1b,temporal-03a trial 0,154,30.32
+JF100,e1b,temporal-03a trial 1,154,30.52
+JF100,e1b,temporal-03a trial 2,154,30.44
+JF100,e1b,temporal-03b trial 0,154,30.96
+JF100,e1b,temporal-03b trial 1,154,29.79
+JF100,e1b,temporal-03b trial 2,154,30.51
+JF100,e1b,temporal-04a trial 0,159,31.12
+JF100,e1b,temporal-04a trial 1,159,30.35
+JF100,e1b,temporal-04a trial 2,159,30.04
+JF100,e1b,temporal-04b trial 0,176,31.86
+JF100,e1b,temporal-04b trial 1,176,31.21
+JF100,e1b,temporal-04b trial 2,176,30.5
+JF100,e1b,temporal-05a trial 0,163,31.72
+JF100,e1b,temporal-05a trial 1,163,31.5
+JF100,e1b,temporal-05a trial 2,163,31.61
+JF100,e1b,temporal-05b trial 0,164,32.68
+JF100,e1b,temporal-05b trial 1,164,32.25
+JF100,e1b,temporal-05b trial 2,164,31.93
+JF100,e1b,code_semantics-01a trial 0,129,31.5
+JF100,e1b,code_semantics-01a trial 1,129,31.56
+JF100,e1b,code_semantics-01a trial 2,129,31.22
+JF100,e1b,code_semantics-01b trial 0,129,31.39
+JF100,e1b,code_semantics-01b trial 1,129,31.88
+JF100,e1b,code_semantics-01b trial 2,129,31.88
+JF100,e1b,code_semantics-02a trial 0,130,32.07
+JF100,e1b,code_semantics-02a trial 1,130,31.13
+JF100,e1b,code_semantics-02a trial 2,130,31.67
+JF100,e1b,code_semantics-02b trial 0,134,32.61
+JF100,e1b,code_semantics-02b trial 1,134,31.32
+JF100,e1b,code_semantics-02b trial 2,134,31.64
+JF100,e1b,code_semantics-03a trial 0,166,34.67
+JF100,e1b,code_semantics-03a trial 1,166,30.3
+JF100,e1b,code_semantics-03a trial 2,166,30.28
+JF100,e1b,code_semantics-03b trial 0,169,30.86
+JF100,e1b,code_semantics-03b trial 1,169,30.99
+JF100,e1b,code_semantics-03b trial 2,169,30.7
+JF100,e1b,code_semantics-04a trial 0,129,31.11
+JF100,e1b,code_semantics-04a trial 1,129,34.12
+JF100,e1b,code_semantics-04a trial 2,129,31.32
+JF100,e1b,code_semantics-04b trial 0,130,31.21
+JF100,e1b,code_semantics-04b trial 1,130,30.43
+JF100,e1b,code_semantics-04b trial 2,130,30.74
+JF100,e1b,code_semantics-05a trial 0,162,31.37
+JF100,e1b,code_semantics-05a trial 1,162,30.74
+JF100,e1b,code_semantics-05a trial 2,162,30.19
+JF100,e1b,code_semantics-05b trial 0,160,30.93
+JF100,e1b,code_semantics-05b trial 1,160,30.2
+JF100,e1b,code_semantics-05b trial 2,160,30.05
+JF100,e1b,algorithms-01a trial 0,158,31.9
+JF100,e1b,algorithms-01a trial 1,158,30.12
+JF100,e1b,algorithms-01a trial 2,158,30.27
+JF100,e1b,algorithms-01b trial 0,158,29.85
+JF100,e1b,algorithms-01b trial 1,158,30.61
+JF100,e1b,algorithms-01b trial 2,158,29.53
+JF100,e1b,algorithms-02a trial 0,190,29.06
+JF100,e1b,algorithms-02a trial 1,190,30.22
+JF100,e1b,algorithms-02a trial 2,190,30.51
+JF100,e1b,algorithms-02b trial 0,190,30.94
+JF100,e1b,algorithms-02b trial 1,190,30.81
+JF100,e1b,algorithms-02b trial 2,190,31.23
+JF100,e1b,algorithms-03a trial 0,160,31.52
+JF100,e1b,algorithms-03a trial 1,160,30.96
+JF100,e1b,algorithms-03a trial 2,160,30.74
+JF100,e1b,algorithms-03b trial 0,160,30.96
+JF100,e1b,algorithms-03b trial 1,160,30.07
+JF100,e1b,algorithms-03b trial 2,160,30.24
+JF100,e1b,algorithms-04a trial 0,138,30.91
+JF100,e1b,algorithms-04a trial 1,138,32.44
+JF100,e1b,algorithms-04a trial 2,138,30.0
+JF100,e1b,algorithms-04b trial 0,138,28.91
+JF100,e1b,algorithms-04b trial 1,138,30.56
+JF100,e1b,algorithms-04b trial 2,138,29.85
+JF100,e1b,algorithms-05a trial 0,168,30.18
+JF100,e1b,algorithms-05a trial 1,168,30.55
+JF100,e1b,algorithms-05a trial 2,168,32.43
+JF100,e1b,algorithms-05b trial 0,168,31.07
+JF100,e1b,algorithms-05b trial 1,168,30.61
+JF100,e1b,algorithms-05b trial 2,168,29.76
+JF100,e1b,evidence_integration-01a trial 0,369,39.12
+JF100,e1b,evidence_integration-01a trial 1,369,39.03
+JF100,e1b,evidence_integration-01a trial 2,369,39.3
+JF100,e1b,evidence_integration-01b trial 0,369,39.16
+JF100,e1b,evidence_integration-01b trial 1,369,39.03
+JF100,e1b,evidence_integration-01b trial 2,369,39.12
+JF100,e1b,evidence_integration-02a trial 0,1549,142.83
+JF100,e1b,evidence_integration-02a trial 1,1549,141.92
+JF100,e1b,evidence_integration-02a trial 2,1549,142.61
+JF100,e1b,evidence_integration-02b trial 0,1549,142.45
+JF100,e1b,evidence_integration-02b trial 1,1549,142.55
+JF100,e1b,evidence_integration-02b trial 2,1549,142.64
+JF100,e1b,evidence_integration-03a trial 0,2986,280.23
+JF100,e1b,evidence_integration-03a trial 1,2986,279.44
+JF100,e1b,evidence_integration-03a trial 2,2986,279.06
+JF100,e1b,evidence_integration-03b trial 0,2986,278.65
+JF100,e1b,evidence_integration-03b trial 1,2986,278.9
+JF100,e1b,evidence_integration-03b trial 2,2986,278.7
+JF100,e1b,evidence_integration-04a trial 0,4096,402.84
+JF100,e1b,evidence_integration-04a trial 1,4096,401.5
+JF100,e1b,evidence_integration-04a trial 2,4096,400.99
+JF100,e1b,evidence_integration-04b trial 0,4096,399.08
+JF100,e1b,evidence_integration-04b trial 1,4096,400.96
+JF100,e1b,evidence_integration-04b trial 2,4096,401.03
+JF100,e1b,evidence_integration-05a trial 0,4096,403.73
+JF100,e1b,evidence_integration-05a trial 1,4096,401.97
+JF100,e1b,evidence_integration-05a trial 2,4096,402.04
+JF100,e1b,evidence_integration-05b trial 0,4096,401.62
+JF100,e1b,evidence_integration-05b trial 1,4096,401.28
+JF100,e1b,evidence_integration-05b trial 2,4096,401.18
+JF100,v19,customer_service-01a trial 0,90,58.27
+JF100,v19,customer_service-01a trial 1,90,59.72
+JF100,v19,customer_service-01a trial 2,90,56.61
+JF100,v19,customer_service-01b trial 0,95,58.19
+JF100,v19,customer_service-01b trial 1,95,57.76
+JF100,v19,customer_service-01b trial 2,95,57.59
+JF100,v19,customer_service-02a trial 0,130,58.55
+JF100,v19,customer_service-02a trial 1,130,59.08
+JF100,v19,customer_service-02a trial 2,130,60.33
+JF100,v19,customer_service-02b trial 0,132,56.85
+JF100,v19,customer_service-02b trial 1,132,60.87
+JF100,v19,customer_service-02b trial 2,132,58.36
+JF100,v19,customer_service-03a trial 0,133,58.56
+JF100,v19,customer_service-03a trial 1,133,58.06
+JF100,v19,customer_service-03a trial 2,133,57.96
+JF100,v19,customer_service-03b trial 0,138,57.97
+JF100,v19,customer_service-03b trial 1,138,60.49
+JF100,v19,customer_service-03b trial 2,138,59.75
+JF100,v19,customer_service-04a trial 0,121,59.97
+JF100,v19,customer_service-04a trial 1,121,60.78
+JF100,v19,customer_service-04a trial 2,121,59.63
+JF100,v19,customer_service-04b trial 0,121,59.82
+JF100,v19,customer_service-04b trial 1,121,59.53
+JF100,v19,customer_service-04b trial 2,121,58.38
+JF100,v19,customer_service-05a trial 0,117,61.8
+JF100,v19,customer_service-05a trial 1,117,57.82
+JF100,v19,customer_service-05a trial 2,117,59.13
+JF100,v19,customer_service-05b trial 0,124,62.75
+JF100,v19,customer_service-05b trial 1,124,60.47
+JF100,v19,customer_service-05b trial 2,124,58.48
+JF100,v19,policy_rules-01a trial 0,135,61.39
+JF100,v19,policy_rules-01a trial 1,135,63.06
+JF100,v19,policy_rules-01a trial 2,135,59.83
+JF100,v19,policy_rules-01b trial 0,135,59.62
+JF100,v19,policy_rules-01b trial 1,135,61.66
+JF100,v19,policy_rules-01b trial 2,135,59.75
+JF100,v19,policy_rules-02a trial 0,102,60.86
+JF100,v19,policy_rules-02a trial 1,102,59.8
+JF100,v19,policy_rules-02a trial 2,102,65.59
+JF100,v19,policy_rules-02b trial 0,102,61.87
+JF100,v19,policy_rules-02b trial 1,102,58.89
+JF100,v19,policy_rules-02b trial 2,102,60.81
+JF100,v19,policy_rules-03a trial 0,132,61.07
+JF100,v19,policy_rules-03a trial 1,132,58.34
+JF100,v19,policy_rules-03a trial 2,132,60.22
+JF100,v19,policy_rules-03b trial 0,132,61.0
+JF100,v19,policy_rules-03b trial 1,132,59.41
+JF100,v19,policy_rules-03b trial 2,132,59.05
+JF100,v19,policy_rules-04a trial 0,122,59.19
+JF100,v19,policy_rules-04a trial 1,122,58.87
+JF100,v19,policy_rules-04a trial 2,122,58.18
+JF100,v19,policy_rules-04b trial 0,122,59.8
+JF100,v19,policy_rules-04b trial 1,122,58.81
+JF100,v19,policy_rules-04b trial 2,122,59.03
+JF100,v19,policy_rules-05a trial 0,185,58.86
+JF100,v19,policy_rules-05a trial 1,185,58.08
+JF100,v19,policy_rules-05a trial 2,185,59.96
+JF100,v19,policy_rules-05b trial 0,184,59.15
+JF100,v19,policy_rules-05b trial 1,184,64.28
+JF100,v19,policy_rules-05b trial 2,184,61.33
+JF100,v19,discourse-01a trial 0,87,59.67
+JF100,v19,discourse-01a trial 1,87,60.75
+JF100,v19,discourse-01a trial 2,87,59.4
+JF100,v19,discourse-01b trial 0,87,58.73
+JF100,v19,discourse-01b trial 1,87,59.19
+JF100,v19,discourse-01b trial 2,87,63.59
+JF100,v19,discourse-02a trial 0,95,60.63
+JF100,v19,discourse-02a trial 1,95,60.08
+JF100,v19,discourse-02a trial 2,95,60.57
+JF100,v19,discourse-02b trial 0,95,59.98
+JF100,v19,discourse-02b trial 1,95,61.51
+JF100,v19,discourse-02b trial 2,95,61.88
+JF100,v19,discourse-03a trial 0,102,60.97
+JF100,v19,discourse-03a trial 1,102,60.64
+JF100,v19,discourse-03a trial 2,102,59.25
+JF100,v19,discourse-03b trial 0,102,61.07
+JF100,v19,discourse-03b trial 1,102,59.95
+JF100,v19,discourse-03b trial 2,102,60.45
+JF100,v19,discourse-04a trial 0,109,60.55
+JF100,v19,discourse-04a trial 1,109,59.6
+JF100,v19,discourse-04a trial 2,109,58.27
+JF100,v19,discourse-04b trial 0,97,60.45
+JF100,v19,discourse-04b trial 1,97,59.81
+JF100,v19,discourse-04b trial 2,97,62.57
+JF100,v19,discourse-05a trial 0,168,60.24
+JF100,v19,discourse-05a trial 1,168,60.29
+JF100,v19,discourse-05a trial 2,168,58.36
+JF100,v19,discourse-05b trial 0,168,57.59
+JF100,v19,discourse-05b trial 1,168,58.03
+JF100,v19,discourse-05b trial 2,168,58.2
+JF100,v19,formal_logic-01a trial 0,164,58.46
+JF100,v19,formal_logic-01a trial 1,164,57.64
+JF100,v19,formal_logic-01a trial 2,164,59.05
+JF100,v19,formal_logic-01b trial 0,165,57.52
+JF100,v19,formal_logic-01b trial 1,165,57.48
+JF100,v19,formal_logic-01b trial 2,165,61.19
+JF100,v19,formal_logic-02a trial 0,173,57.32
+JF100,v19,formal_logic-02a trial 1,173,60.44
+JF100,v19,formal_logic-02a trial 2,173,58.99
+JF100,v19,formal_logic-02b trial 0,174,58.29
+JF100,v19,formal_logic-02b trial 1,174,59.0
+JF100,v19,formal_logic-02b trial 2,174,59.19
+JF100,v19,formal_logic-03a trial 0,172,58.65
+JF100,v19,formal_logic-03a trial 1,172,60.53
+JF100,v19,formal_logic-03a trial 2,172,60.65
+JF100,v19,formal_logic-03b trial 0,166,59.84
+JF100,v19,formal_logic-03b trial 1,166,60.41
+JF100,v19,formal_logic-03b trial 2,166,58.47
+JF100,v19,formal_logic-04a trial 0,178,59.97
+JF100,v19,formal_logic-04a trial 1,178,59.35
+JF100,v19,formal_logic-04a trial 2,178,60.71
+JF100,v19,formal_logic-04b trial 0,179,61.6
+JF100,v19,formal_logic-04b trial 1,179,60.35
+JF100,v19,formal_logic-04b trial 2,179,59.21
+JF100,v19,formal_logic-05a trial 0,188,59.13
+JF100,v19,formal_logic-05a trial 1,188,60.75
+JF100,v19,formal_logic-05a trial 2,188,65.19
+JF100,v19,formal_logic-05b trial 0,183,61.01
+JF100,v19,formal_logic-05b trial 1,183,58.65
+JF100,v19,formal_logic-05b trial 2,183,62.87
+JF100,v19,relations-01a trial 0,185,62.55
+JF100,v19,relations-01a trial 1,185,61.18
+JF100,v19,relations-01a trial 2,185,59.52
+JF100,v19,relations-01b trial 0,185,61.03
+JF100,v19,relations-01b trial 1,185,62.68
+JF100,v19,relations-01b trial 2,185,62.83
+JF100,v19,relations-02a trial 0,198,62.61
+JF100,v19,relations-02a trial 1,198,60.52
+JF100,v19,relations-02a trial 2,198,60.8
+JF100,v19,relations-02b trial 0,198,60.79
+JF100,v19,relations-02b trial 1,198,60.85
+JF100,v19,relations-02b trial 2,198,59.16
+JF100,v19,relations-03a trial 0,211,60.14
+JF100,v19,relations-03a trial 1,211,59.5
+JF100,v19,relations-03a trial 2,211,60.59
+JF100,v19,relations-03b trial 0,211,59.64
+JF100,v19,relations-03b trial 1,211,56.95
+JF100,v19,relations-03b trial 2,211,57.26
+JF100,v19,relations-04a trial 0,237,57.36
+JF100,v19,relations-04a trial 1,237,59.1
+JF100,v19,relations-04a trial 2,237,56.8
+JF100,v19,relations-04b trial 0,237,61.76
+JF100,v19,relations-04b trial 1,237,57.68
+JF100,v19,relations-04b trial 2,237,60.05
+JF100,v19,relations-05a trial 0,276,57.96
+JF100,v19,relations-05a trial 1,276,57.84
+JF100,v19,relations-05a trial 2,276,58.98
+JF100,v19,relations-05b trial 0,276,59.41
+JF100,v19,relations-05b trial 1,276,57.28
+JF100,v19,relations-05b trial 2,276,58.32
+JF100,v19,mathematics-01a trial 0,91,61.68
+JF100,v19,mathematics-01a trial 1,91,58.79
+JF100,v19,mathematics-01a trial 2,91,61.16
+JF100,v19,mathematics-01b trial 0,91,58.45
+JF100,v19,mathematics-01b trial 1,91,59.03
+JF100,v19,mathematics-01b trial 2,91,61.21
+JF100,v19,mathematics-02a trial 0,107,60.52
+JF100,v19,mathematics-02a trial 1,107,59.59
+JF100,v19,mathematics-02a trial 2,107,58.01
+JF100,v19,mathematics-02b trial 0,108,58.75
+JF100,v19,mathematics-02b trial 1,108,59.2
+JF100,v19,mathematics-02b trial 2,108,57.84
+JF100,v19,mathematics-03a trial 0,104,61.33
+JF100,v19,mathematics-03a trial 1,104,60.83
+JF100,v19,mathematics-03a trial 2,104,60.99
+JF100,v19,mathematics-03b trial 0,104,60.93
+JF100,v19,mathematics-03b trial 1,104,60.44
+JF100,v19,mathematics-03b trial 2,104,59.83
+JF100,v19,mathematics-04a trial 0,102,59.92
+JF100,v19,mathematics-04a trial 1,102,58.8
+JF100,v19,mathematics-04a trial 2,102,59.24
+JF100,v19,mathematics-04b trial 0,102,58.26
+JF100,v19,mathematics-04b trial 1,102,60.46
+JF100,v19,mathematics-04b trial 2,102,59.52
+JF100,v19,mathematics-05a trial 0,131,63.85
+JF100,v19,mathematics-05a trial 1,131,62.98
+JF100,v19,mathematics-05a trial 2,131,59.54
+JF100,v19,mathematics-05b trial 0,130,58.07
+JF100,v19,mathematics-05b trial 1,130,58.55
+JF100,v19,mathematics-05b trial 2,130,58.99
+JF100,v19,temporal-01a trial 0,138,60.67
+JF100,v19,temporal-01a trial 1,138,60.83
+JF100,v19,temporal-01a trial 2,138,60.44
+JF100,v19,temporal-01b trial 0,138,58.99
+JF100,v19,temporal-01b trial 1,138,61.52
+JF100,v19,temporal-01b trial 2,138,60.68
+JF100,v19,temporal-02a trial 0,141,59.93
+JF100,v19,temporal-02a trial 1,141,64.33
+JF100,v19,temporal-02a trial 2,141,56.7
+JF100,v19,temporal-02b trial 0,141,57.12
+JF100,v19,temporal-02b trial 1,141,59.05
+JF100,v19,temporal-02b trial 2,141,57.83
+JF100,v19,temporal-03a trial 0,150,61.47
+JF100,v19,temporal-03a trial 1,150,58.05
+JF100,v19,temporal-03a trial 2,150,57.8
+JF100,v19,temporal-03b trial 0,150,58.14
+JF100,v19,temporal-03b trial 1,150,60.0
+JF100,v19,temporal-03b trial 2,150,58.87
+JF100,v19,temporal-04a trial 0,160,60.35
+JF100,v19,temporal-04a trial 1,160,59.6
+JF100,v19,temporal-04a trial 2,160,58.66
+JF100,v19,temporal-04b trial 0,177,62.73
+JF100,v19,temporal-04b trial 1,177,60.68
+JF100,v19,temporal-04b trial 2,177,59.43
+JF100,v19,temporal-05a trial 0,168,58.97
+JF100,v19,temporal-05a trial 1,168,58.91
+JF100,v19,temporal-05a trial 2,168,60.76
+JF100,v19,temporal-05b trial 0,169,58.21
+JF100,v19,temporal-05b trial 1,169,57.51
+JF100,v19,temporal-05b trial 2,169,57.12
+JF100,v19,code_semantics-01a trial 0,125,58.85
+JF100,v19,code_semantics-01a trial 1,125,59.3
+JF100,v19,code_semantics-01a trial 2,125,59.06
+JF100,v19,code_semantics-01b trial 0,125,57.86
+JF100,v19,code_semantics-01b trial 1,125,58.34
+JF100,v19,code_semantics-01b trial 2,125,60.87
+JF100,v19,code_semantics-02a trial 0,129,61.57
+JF100,v19,code_semantics-02a trial 1,129,60.88
+JF100,v19,code_semantics-02a trial 2,129,62.67
+JF100,v19,code_semantics-02b trial 0,134,61.57
+JF100,v19,code_semantics-02b trial 1,134,59.9
+JF100,v19,code_semantics-02b trial 2,134,59.36
+JF100,v19,code_semantics-03a trial 0,165,60.14
+JF100,v19,code_semantics-03a trial 1,165,60.59
+JF100,v19,code_semantics-03a trial 2,165,56.63
+JF100,v19,code_semantics-03b trial 0,167,59.48
+JF100,v19,code_semantics-03b trial 1,167,58.19
+JF100,v19,code_semantics-03b trial 2,167,59.69
+JF100,v19,code_semantics-04a trial 0,126,61.01
+JF100,v19,code_semantics-04a trial 1,126,59.66
+JF100,v19,code_semantics-04a trial 2,126,57.68
+JF100,v19,code_semantics-04b trial 0,127,63.0
+JF100,v19,code_semantics-04b trial 1,127,56.87
+JF100,v19,code_semantics-04b trial 2,127,59.59
+JF100,v19,code_semantics-05a trial 0,157,59.09
+JF100,v19,code_semantics-05a trial 1,157,57.58
+JF100,v19,code_semantics-05a trial 2,157,60.1
+JF100,v19,code_semantics-05b trial 0,154,59.85
+JF100,v19,code_semantics-05b trial 1,154,59.18
+JF100,v19,code_semantics-05b trial 2,154,60.05
+JF100,v19,algorithms-01a trial 0,158,59.34
+JF100,v19,algorithms-01a trial 1,158,60.15
+JF100,v19,algorithms-01a trial 2,158,59.56
+JF100,v19,algorithms-01b trial 0,158,59.48
+JF100,v19,algorithms-01b trial 1,158,62.75
+JF100,v19,algorithms-01b trial 2,158,59.0
+JF100,v19,algorithms-02a trial 0,195,59.62
+JF100,v19,algorithms-02a trial 1,195,60.96
+JF100,v19,algorithms-02a trial 2,195,62.23
+JF100,v19,algorithms-02b trial 0,195,62.21
+JF100,v19,algorithms-02b trial 1,195,60.2
+JF100,v19,algorithms-02b trial 2,195,61.05
+JF100,v19,algorithms-03a trial 0,164,60.27
+JF100,v19,algorithms-03a trial 1,164,58.57
+JF100,v19,algorithms-03a trial 2,164,59.74
+JF100,v19,algorithms-03b trial 0,164,60.35
+JF100,v19,algorithms-03b trial 1,164,61.42
+JF100,v19,algorithms-03b trial 2,164,60.09
+JF100,v19,algorithms-04a trial 0,136,61.56
+JF100,v19,algorithms-04a trial 1,136,60.77
+JF100,v19,algorithms-04a trial 2,136,58.3
+JF100,v19,algorithms-04b trial 0,136,60.92
+JF100,v19,algorithms-04b trial 1,136,59.74
+JF100,v19,algorithms-04b trial 2,136,58.21
+JF100,v19,algorithms-05a trial 0,168,60.88
+JF100,v19,algorithms-05a trial 1,168,58.07
+JF100,v19,algorithms-05a trial 2,168,58.73
+JF100,v19,algorithms-05b trial 0,168,59.73
+JF100,v19,algorithms-05b trial 1,168,60.37
+JF100,v19,algorithms-05b trial 2,168,60.02
+JF100,v19,evidence_integration-01a trial 0,371,59.57
+JF100,v19,evidence_integration-01a trial 1,371,62.67
+JF100,v19,evidence_integration-01a trial 2,371,59.08
+JF100,v19,evidence_integration-01b trial 0,371,58.77
+JF100,v19,evidence_integration-01b trial 1,371,60.0
+JF100,v19,evidence_integration-01b trial 2,371,58.97
+JF100,v19,evidence_integration-02a trial 0,1565,105.53
+JF100,v19,evidence_integration-02a trial 1,1565,105.98
+JF100,v19,evidence_integration-02a trial 2,1565,106.58
+JF100,v19,evidence_integration-02b trial 0,1565,106.93
+JF100,v19,evidence_integration-02b trial 1,1565,107.15
+JF100,v19,evidence_integration-02b trial 2,1565,107.44
+JF100,v19,evidence_integration-03a trial 0,3016,198.27
+JF100,v19,evidence_integration-03a trial 1,3016,198.69
+JF100,v19,evidence_integration-03a trial 2,3016,199.29
+JF100,v19,evidence_integration-03b trial 0,3016,198.07
+JF100,v19,evidence_integration-03b trial 1,3016,198.9
+JF100,v19,evidence_integration-03b trial 2,3016,197.23
+JF100,v19,evidence_integration-04a trial 0,4096,258.79
+JF100,v19,evidence_integration-04a trial 1,4096,260.69
+JF100,v19,evidence_integration-04a trial 2,4096,256.12
+JF100,v19,evidence_integration-04b trial 0,4096,255.19
+JF100,v19,evidence_integration-04b trial 1,4096,255.01
+JF100,v19,evidence_integration-04b trial 2,4096,257.62
+JF100,v19,evidence_integration-05a trial 0,4096,259.74
+JF100,v19,evidence_integration-05a trial 1,4096,261.08
+JF100,v19,evidence_integration-05a trial 2,4096,262.35
+JF100,v19,evidence_integration-05b trial 0,4096,260.21
+JF100,v19,evidence_integration-05b trial 1,4096,259.85
+JF100,v19,evidence_integration-05b trial 2,4096,259.33
