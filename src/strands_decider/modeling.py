@@ -73,6 +73,11 @@ class StrandsDeciderConfig:
     # query for a bidirectional encoder (docs/encoder-design.md, Phase 0). An
     # encoder-decoder's query is always its decoder's first position.
     query_pool: str = "last"
+    # Encoder-only torsos (T5Gemma's encoder): state tokens attend only to the state, question
+    # tokens to the state and their own question. The state's encoding is then the same for
+    # every question in a request, so serving encodes it once (infer.py, e1b in
+    # docs/encoder-design.md). Training and evaluation pass each row's state length.
+    state_mask: bool = False
     # Populated after `strands-decider calibrate` runs; 1.0 is a no-op. `temperature` is the
     # fallback; `temperature_by_kind` overrides it per primitive where fitted.
     # One global scalar cannot serve all three: noul/choice/score sit at very
@@ -246,6 +251,35 @@ def mean_pool(hidden_states: torch.Tensor, attention_mask: torch.Tensor) -> torc
     if m.size(1) != hidden_states.size(1):
         raise ValueError("mean pooling needs the whole sequence's states")
     return (hidden_states.to(torch.float32) * m).sum(1) / m.sum(1).clamp_min(1.0)
+
+
+def bidirectional_masks(
+    attention_mask: torch.Tensor,
+    sliding_window: int | None,
+    state_len: torch.Tensor | None = None,
+) -> dict[str, torch.Tensor]:
+    """A T5Gemma encoder's two per-layer masks, boolean [B, 1, L, L], True = may attend.
+
+    The same masks transformers builds for SDPA (create_bidirectional_mask and
+    create_bidirectional_sliding_window_mask: a query sees every real key, and in sliding
+    layers only keys within |i - j| <= sliding_window; tests pin the equality). With
+    `state_len`, a row's first state_len tokens, its state, attend only to each other,
+    while every later token attends to all real tokens: the state's encoding cannot see the
+    question. Padded query rows sit past the state, so no row is ever fully masked.
+    """
+    b, n = attention_mask.shape
+    dev = attention_mask.device
+    full = attention_mask.bool()[:, None, None, :].expand(b, 1, n, n)
+    if state_len is not None:
+        i = torch.arange(n, device=dev)[None, None, :, None]
+        j = torch.arange(n, device=dev)[None, None, None, :]
+        s = state_len.to(dev)[:, None, None, None]
+        full = full & ((j < s) | (i >= s))
+    if sliding_window is None:
+        return {"full_attention": full, "sliding_attention": full}
+    pos = torch.arange(n, device=dev)
+    near = (pos[:, None] - pos[None, :]).abs() <= sliding_window
+    return {"full_attention": full, "sliding_attention": full & near[None, None]}
 
 
 def masked_log_softmax(logits: torch.Tensor, n_slots: torch.Tensor) -> torch.Tensor:
@@ -467,6 +501,7 @@ class StrandsDeciderModel(nn.Module):
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
         past_key_values: Any = None,
+        state_len: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """(states the option keys are gathered from, the query), the query in fp32.
 
@@ -481,7 +516,15 @@ class StrandsDeciderModel(nn.Module):
             if self.is_bidirectional(self.torso):
                 if past_key_values is not None:
                     raise ValueError("a bidirectional torso has no shared-prefix cache")
-                hidden = self.torso(input_ids=input_ids, attention_mask=attention_mask,
+                mask: Any = attention_mask
+                if self.config.state_mask:
+                    cfg: Any = self.torso.config
+                    if cfg.model_type != "t5_gemma_module" or cfg._attn_implementation != "sdpa":
+                        raise ValueError("state_mask needs a T5Gemma encoder under SDPA")
+                    if state_len is None:
+                        raise ValueError("state_mask needs each row's state_len")
+                    mask = bidirectional_masks(attention_mask, cfg.sliding_window, state_len)
+                hidden = self.torso(input_ids=input_ids, attention_mask=mask,
                                     return_dict=True).last_hidden_state
             else:
                 hidden = self.encode(input_ids, attention_mask, past_key_values=past_key_values)
@@ -603,8 +646,9 @@ class StrandsDeciderModel(nn.Module):
         past_key_values: Any = None,
         temperature: Any | None = None,
         opt_idx: torch.Tensor | None = None,
+        state_len: torch.Tensor | None = None,
     ) -> dict[str, torch.Tensor]:
-        hidden, pooled = self.readout_states(input_ids, attention_mask, past_key_values)
+        hidden, pooled = self.readout_states(input_ids, attention_mask, past_key_values, state_len)
         if self.config.head_type in POINTER_HEADS:
             if opt_idx is None:
                 raise ValueError("pointer head needs opt_idx (option token positions)")

@@ -71,6 +71,36 @@ class UnforkableCache(TypeError):
     """A KV cache layout `_expand_cache` cannot safely repeat across rows."""
 
 
+# The masked state cache's attention (e1b, docs/encoder-design.md). Registered as an attention
+# implementation, so the encoder's own layers, LoRA adapters, norms and rotary embedding run
+# unchanged: "record" keeps each layer's state keys and values (post-rotary) while the state
+# is encoded alone; "replay" puts them ahead of the questions' own in every layer, so a
+# question attends to the state exactly as in the full masked forward, which never let the
+# state see a question. Single-threaded: one engine call at a time.
+_STATE_CACHE: dict[str, Any] = {"mode": None, "kv": {}}
+_STATE_CACHE_IMPL = "strands_state_cache"
+
+
+def _state_cache_attention(module: Any, query: torch.Tensor, key: torch.Tensor,
+                           value: torch.Tensor, attention_mask: Any, **kwargs: Any) -> Any:
+    from transformers.integrations.sdpa_attention import sdpa_attention_forward
+
+    if _STATE_CACHE["mode"] == "record":
+        _STATE_CACHE["kv"][module.layer_idx] = (key, value)
+    elif _STATE_CACHE["mode"] == "replay":
+        sk, sv = _STATE_CACHE["kv"][module.layer_idx]
+        n = query.size(0)
+        key = torch.cat([sk.expand(n, -1, -1, -1), key], dim=2)
+        value = torch.cat([sv.expand(n, -1, -1, -1), value], dim=2)
+    return sdpa_attention_forward(module, query, key, value, attention_mask, **kwargs)
+
+
+def _register_state_cache() -> None:
+    from transformers import AttentionInterface
+
+    AttentionInterface.register(_STATE_CACHE_IMPL, _state_cache_attention)
+
+
 # Per-row state a cache layer may hold (transformers 5): attention layers' `keys` and
 # `values`; a linear-attention (Gated DeltaNet) layer's `conv_states` and
 # `recurrent_states`, each a dict of tensors keyed by state index. First dim is the batch.
@@ -145,8 +175,17 @@ class SystemOneEngine:
         # encoded once is not what training saw; a mean query needs the whole sequence's
         # states. Either way every question re-encodes the state, batched
         # (docs/bidi-design.md#inference, docs/encoder-design.md).
-        self._no_prefix_cache = (StrandsDeciderModel.is_bidirectional(model.torso)
-                                 or getattr(getattr(model, "config", None), "query_pool", "last") != "last")
+        # A state-masked T5Gemma encoder has its own exact cache (_slot_probs_state_cache);
+        # for it, `use_prefix_cache` selects that cache.
+        self._state_cache = (
+            bool(getattr(getattr(model, "config", None), "state_mask", False))
+            and getattr(getattr(model.torso, "config", None), "model_type", None) == "t5_gemma_module"
+        )
+        if self._state_cache:
+            _register_state_cache()
+        self._no_prefix_cache = not self._state_cache and (
+            StrandsDeciderModel.is_bidirectional(model.torso)
+            or getattr(getattr(model, "config", None), "query_pool", "last") != "last")
         if self.cfg.use_prefix_cache and self._no_prefix_cache:
             print("[strands-decider] bidirectional torso or mean query: no shared-prefix "
                   "cache; questions are encoded with the state, batched")
@@ -276,14 +315,71 @@ class SystemOneEngine:
         assert rendered is not None or self.model.config.head_type not in POINTER_HEADS
         opt_idx = (self._option_idx(rendered, len(s))  # type: ignore[arg-type]
                    if self.model.config.head_type in POINTER_HEADS else None)
+        # A state-masked model needs each row's state length: the same state in every row.
+        state_len = (torch.full((len(q),), len(s), device=self.device)
+                     if getattr(self.model.config, "state_mask", False) else None)
         out = self.model(
             input_ids=ids,
             attention_mask=mask,
             n_slots=torch.tensor(n_slots, device=self.device),
             temperature=self._temperatures(kinds),
             opt_idx=opt_idx,
+            state_len=state_len,
         )
         return out["log_probs"].exp(), int(mask.sum().item())
+
+    @torch.inference_mode()  # type: ignore[untyped-decorator]
+    def _slot_probs_state_cache(
+        self,
+        state_text: str,
+        question_texts: list[str],
+        n_slots: list[int],
+        kinds: list[str],
+        rendered: list[RenderedQuestion],
+    ) -> tuple[torch.Tensor, int]:
+        """A state-masked model: encode the state once, then every question against it.
+
+        The state is encoded alone (batch 1, positions 0..S-1): under the state mask that is
+        exactly its encoding in any full prompt, since it never attends past itself. Its
+        per-layer keys and values are kept (_state_cache_attention) and replayed ahead of
+        the questions' own while the questions run as one batch at positions S onwards. Each
+        question's mask is the question rows of the full masked prompt's masks, so its
+        window and padding are as in training. The query is the mean over state and question
+        tokens together, the same mean the full forward takes.
+        """
+        from .modeling import bidirectional_masks, gather_options
+
+        s, q = self._fit(state_text, question_texts)
+        torso, m, n = self.model.torso, len(q), len(s)
+        cfg: Any = torso.config
+        window = cfg.sliding_window
+        previous = cfg._attn_implementation
+        try:
+            cfg._attn_implementation = _STATE_CACHE_IMPL
+            _STATE_CACHE.update(mode="record", kv={})
+            state_ids = torch.tensor([s], device=self.device)
+            state_masks = bidirectional_masks(torch.ones_like(state_ids), window)
+            h_state = torso(input_ids=state_ids, attention_mask=state_masks).last_hidden_state
+
+            _STATE_CACHE["mode"] = "replay"
+            q_ids, q_mask = self._pad(q)
+            width = q_ids.size(1)
+            whole = torch.cat([torch.ones(m, n, dtype=q_mask.dtype, device=self.device), q_mask], 1)
+            masks = {k: v[:, :, n:, :] for k, v in bidirectional_masks(
+                whole, window, torch.full((m,), n, device=self.device)).items()}
+            positions = (n + torch.arange(width, device=self.device)).expand(m, width)
+            h_q = torso(input_ids=q_ids, attention_mask=masks, position_ids=positions).last_hidden_state
+        finally:
+            cfg._attn_implementation = previous
+            _STATE_CACHE.update(mode=None, kv={})
+
+        valid = q_mask.to(torch.float32).unsqueeze(-1)
+        total = h_state[0].to(torch.float32).sum(0) + (h_q.to(torch.float32) * valid).sum(1)
+        pooled = total / (n + valid.sum(1))
+        options = gather_options(h_q, self._option_idx(rendered, 0)).to(torch.float32)
+        logits = apply_temperature(self.model.head(pooled, options), self._temperatures(kinds))
+        log_probs = masked_log_softmax(logits, torch.tensor(n_slots, device=self.device))
+        return log_probs.exp(), n + int(q_mask.sum().item())
 
     @torch.inference_mode()  # type: ignore[untyped-decorator]
     def _slot_probs_shared_prefix(
@@ -381,7 +477,13 @@ class SystemOneEngine:
             # One question gains nothing from a shared prefix and pays a second forward:
             # measured on JevBench (one question per task), p50 0.111 s batched, 0.204 s
             # through the prefix path, with the same answers.
-            if self.cfg.use_prefix_cache and len(chunk_rendered) > 1 and not self._no_prefix_cache:
+            if self.cfg.use_prefix_cache and len(chunk_rendered) > 1 and self._state_cache:
+                probs, ntok = self._slot_probs_state_cache(
+                    state_text, [rq.text for rq in chunk_rendered], chunk_slots,
+                    chunk_kinds, rendered=chunk_rendered,
+                )
+                total_tokens += ntok
+            elif self.cfg.use_prefix_cache and len(chunk_rendered) > 1 and not self._no_prefix_cache:
                 try:
                     probs, ntok = self._slot_probs_shared_prefix(
                         state_text, [rq.text for rq in chunk_rendered], chunk_slots,

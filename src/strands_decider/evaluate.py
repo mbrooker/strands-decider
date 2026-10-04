@@ -128,6 +128,7 @@ def collect_logits(
             max_length=max_length,
             num_slots=model.config.num_slots,
             head_type=model.config.head_type,
+            state_mask=getattr(model.config, "state_mask", False),
         ),
         train=False,  # no option shuffling: evaluation must be deterministic
     )
@@ -138,12 +139,15 @@ def collect_logits(
     all_logits, all_labels, all_slots = [], [], []
     for batch in loader:
         batch = {k: v.to(device) for k, v in batch.items()}
+        # Only a state-masked model's collator emits state_len (modeling.bidirectional_masks).
+        extra = {"state_len": batch["state_len"]} if "state_len" in batch else {}
         out = model(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
             n_slots=batch["n_slots"],
             opt_idx=batch.get("opt_idx"),
             temperature=1.0,  # raw logits; calibration is applied afterwards
+            **extra,
         )
         logits = out["logits"].float()
         # A pointer head scores a padded option slot from the hidden state at position

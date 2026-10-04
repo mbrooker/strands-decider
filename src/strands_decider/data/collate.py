@@ -40,6 +40,9 @@ class CollatorConfig:
     ordinal_smoothing: float = 0.1
     # Sample among an example's instruction phrasings each epoch.
     vary_instructions: bool = True
+    # Emit each row's state length in tokens (`state_len`), for a model trained with the
+    # masked state cache (modeling.bidirectional_masks).
+    state_mask: bool = False
     seed: int = 0
 
 
@@ -121,6 +124,16 @@ class SystemOneCollator:
                 )
             out.append(last)
         return out
+
+    @staticmethod
+    def state_token_count(offsets: Sequence[Sequence[int]], base: int) -> int:
+        """Tokens before the first one that reaches past character `base`, where the
+        question starts: the state, with any leading special token. A token straddling the
+        boundary counts as question, so the state never reads a question character."""
+        for j, (lo, hi) in enumerate(offsets):
+            if hi > lo and hi > base:
+                return j
+        raise ValueError("the prompt has no question tokens")
 
     @staticmethod
     def _remap_label(label: int, order: Sequence[int] | None) -> int:
@@ -207,7 +220,7 @@ class SystemOneCollator:
             # Right padding: pool_last_token finds the final real token by mask length,
             # and the shared-prefix cache in infer.py assumes the prompt starts at 0.
             padding_side="right",
-            return_offsets_mapping=pointer,
+            return_offsets_mapping=pointer or self.cfg.state_mask,
         )
 
         out: dict[str, torch.Tensor] = {
@@ -218,6 +231,12 @@ class SystemOneCollator:
             "weights": torch.tensor(weights, dtype=torch.float32),
         }
         width = self.cfg.num_slots
+        if self.cfg.state_mask:
+            offs = enc["offset_mapping"].tolist()
+            out["state_len"] = torch.tensor(
+                [self.state_token_count(offs[i], base) for i, (base, _) in enumerate(spans)],
+                dtype=torch.long,
+            )
         if pointer:
             offs = enc["offset_mapping"].tolist()
             per = [

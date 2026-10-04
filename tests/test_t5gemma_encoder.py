@@ -51,10 +51,10 @@ def base_dir(tmp_path_factory):
     return str(path)
 
 
-def _model(base_dir, *, query_pool="mean"):
+def _model(base_dir, *, query_pool="mean", state_mask=False):
     cfg = StrandsDeciderConfig(base_model=base_dir, head_type="xpointer", pointer_dim=16,
-                               query_pool=query_pool, max_length=512, use_lora=True,
-                               torch_dtype="float32", lora_r=4)
+                               query_pool=query_pool, state_mask=state_mask, max_length=512,
+                               use_lora=True, torch_dtype="float32", lora_r=4)
     torch.manual_seed(1)
     m = StrandsDeciderModel.from_pretrained_base(cfg)
     with torch.no_grad():  # a fresh adapter is a no-op; perturb it, as training would
@@ -79,14 +79,15 @@ def _examples():
 
 
 def _batch(model, examples):
-    coll = SystemOneCollator(model.tokenizer, CollatorConfig(head_type="xpointer", max_length=512),
-                             train=False)
+    coll = SystemOneCollator(model.tokenizer, CollatorConfig(
+        head_type="xpointer", max_length=512, state_mask=model.config.state_mask), train=False)
     return coll(examples)
 
 
 def _forward(model, b):
     return model(input_ids=b["input_ids"], attention_mask=b["attention_mask"],
-                 n_slots=b["n_slots"], opt_idx=b["opt_idx"], labels=b["labels"])
+                 n_slots=b["n_slots"], opt_idx=b["opt_idx"], labels=b["labels"],
+                 state_len=b.get("state_len"))
 
 
 def test_encoder_only_torso_with_lora_on_the_encoder(base_dir):
@@ -162,3 +163,97 @@ def test_no_lm_readout_to_anchor_to(base_dir):
     b = _batch(m, _examples())
     with pytest.raises(ValueError, match="kl_frozen_weight"):
         m.frozen_slot_log_probs(b["input_ids"], b["attention_mask"], b["n_slots"])
+
+
+# ---- e1b: the masked state cache ------------------------------------------------------
+
+
+def test_masks_match_transformers(base_dir):
+    """Without a state length, bidirectional_masks is exactly what transformers builds for
+    SDPA, in both layer types, on a right-padded batch."""
+    from transformers.masking_utils import (
+        create_bidirectional_mask,
+        create_bidirectional_sliding_window_mask,
+    )
+
+    from strands_decider.modeling import bidirectional_masks
+
+    m = _model(base_dir)
+    cfg = m.torso.config
+    am = torch.ones(2, 20, dtype=torch.long)
+    am[1, 13:] = 0
+    emb = torch.empty(2, 20, 1)
+    ours = bidirectional_masks(am, cfg.sliding_window)
+    full = create_bidirectional_mask(config=cfg, inputs_embeds=emb, attention_mask=am)
+    sliding = create_bidirectional_sliding_window_mask(config=cfg, inputs_embeds=emb, attention_mask=am)
+    assert torch.equal(ours["full_attention"], full)
+    assert torch.equal(ours["sliding_attention"], sliding)
+
+
+def test_state_len_is_the_state_alone(base_dir):
+    """The collator's state length is the state rendered and tokenized alone: the boundary
+    tokenizes cleanly, so serving (state tokenized on its own) sees training's split."""
+    from strands_decider.prompting import render_state
+
+    m = _model(base_dir, state_mask=True)
+    exs = _examples()
+    b = _batch(m, exs)
+    for i, ex in enumerate(exs):
+        alone = m.tokenizer(render_state(ex.state), add_special_tokens=True)["input_ids"]
+        assert int(b["state_len"][i]) == len(alone)
+        assert b["input_ids"][i, : len(alone)].tolist() == alone
+
+
+def test_state_never_sees_the_question(base_dir):
+    """Under the state mask, two prompts with one state and different questions give the
+    state's tokens the same encoding, which is what makes caching it exact."""
+    m = _model(base_dir, state_mask=True)
+    a, b = _examples()[0], _examples()[0]
+    b = Example(kind="noul", state=a.state, instructions="Is anyone angry?",
+                options=[["false", ""], ["true", ""]], label=0, task="t")
+    batch = _batch(m, [a, b])
+    n = int(batch["state_len"][0])
+    assert n == int(batch["state_len"][1])
+    from strands_decider.modeling import bidirectional_masks
+
+    with torch.no_grad():
+        masks = bidirectional_masks(batch["attention_mask"], m.torso.config.sliding_window,
+                                    batch["state_len"])
+        h = m.torso(input_ids=batch["input_ids"], attention_mask=masks).last_hidden_state
+    torch.testing.assert_close(h[0, :n], h[1, :n], atol=1e-5, rtol=1e-5)
+
+
+def test_state_masked_model_trains(base_dir):
+    m = _model(base_dir, state_mask=True).train()
+    out = _forward(m, _batch(m, _examples()))
+    out["loss"].backward()
+    assert any(p.grad is not None and p.grad.abs().sum() > 0
+               for n, p in m.torso.named_parameters() if "lora_A" in n)
+
+
+def test_state_cache_is_exact(base_dir):
+    """The serving path (state once, questions against its cached keys and values) gives the
+    answers of the full masked forward, in fp32."""
+    m = _model(base_dir, state_mask=True)
+    state = "Help! My payouts have been failing for 3 days! " * 6
+    qs = {
+        "team": ChoiceQuestion(instructions="Which team should handle this?",
+                               criteria={"billing": "payments", "technical": "bugs", "sales": None}),
+        "urgent": NoulQuestion(instructions="Does this convey urgency?"),
+        "mood": ScoreQuestion(instructions="How frustrated is the writer?",
+                              criteria=["calm", "frustrated", "furious", "livid"]),
+    }
+    cached = SystemOneEngine(m, EngineConfig(device="cpu", use_prefix_cache=True))
+    assert cached.cfg.use_prefix_cache and cached._state_cache
+    batched = SystemOneEngine(m, EngineConfig(device="cpu", use_prefix_cache=False))
+    a, b = cached.ask(state, qs).answers, batched.ask(state, qs).answers
+    for name in qs:
+        da, db = a[name].model_dump(), b[name].model_dump()
+        for key in ("noul", "score", "confidence"):
+            if key in da:
+                assert da[key] == pytest.approx(db[key], abs=2e-4), (name, key)
+        if "probabilities" in da:
+            for k in da["probabilities"]:
+                assert da["probabilities"][k] == pytest.approx(db["probabilities"][k], abs=2e-4)
+    # The attention implementation is restored after the cached call.
+    assert m.torso.config._attn_implementation == "sdpa"

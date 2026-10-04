@@ -63,6 +63,8 @@ class TrainConfig:
     pointer_dim: int = 256
     # "last" or "mean": the pointer query on a causal or encoder-only torso (modeling.py).
     query_pool: str = "last"
+    # The masked state cache (modeling.bidirectional_masks): T5Gemma encoder torsos only.
+    state_mask: bool = False
     head_init: str = "random"
     # >0 adds KL(frozen || student) so training cannot drift away from that readout.
     kl_frozen_weight: float = 0.0
@@ -205,6 +207,7 @@ def evaluate_loss(
             attention_mask=batch["attention_mask"],
             n_slots=batch["n_slots"],
             opt_idx=batch.get("opt_idx"),
+            state_len=batch.get("state_len"),
             labels=batch["labels"],
             label_dist=batch.get("label_dist"),
             weights=batch.get("weights"),
@@ -296,6 +299,7 @@ def train(cfg: TrainConfig) -> str:
         head_type=cfg.head_type,
         pointer_dim=cfg.pointer_dim,
         query_pool=cfg.query_pool,
+        state_mask=cfg.state_mask,
     )
     if cfg.lora_targets:
         model_cfg.lora_targets = list(cfg.lora_targets)
@@ -400,6 +404,7 @@ def train(cfg: TrainConfig) -> str:
         reverse_score_prob=cfg.reverse_score_prob,
         seed=cfg.seed,
         head_type=cfg.head_type,
+        state_mask=cfg.state_mask,
     )
     train_collate = SystemOneCollator(model.tokenizer, coll_cfg, train=True)
     if cfg.group_by_length:
@@ -491,6 +496,7 @@ def train(cfg: TrainConfig) -> str:
                 attention_mask=batch["attention_mask"],
                 n_slots=batch["n_slots"],
                 opt_idx=batch.get("opt_idx"),
+                state_len=batch.get("state_len"),
                 labels=batch["labels"],
                 label_dist=batch.get("label_dist"),
                 weights=batch.get("weights"),

@@ -40,7 +40,7 @@ class _Reversed(SystemOneCollator):
 def _probs(model, coll, rows, device):  # type: ignore[no-untyped-def]
     b = {k: v.to(device) for k, v in coll(rows).items()}
     out = model(input_ids=b["input_ids"], attention_mask=b["attention_mask"],
-                n_slots=b["n_slots"], opt_idx=b.get("opt_idx"))
+                n_slots=b["n_slots"], opt_idx=b.get("opt_idx"), state_len=b.get("state_len"))
     return out["log_probs"].float().exp().cpu()
 
 
@@ -59,7 +59,8 @@ def main() -> None:
     random.Random(0).shuffle(rows)
     rows = rows[: args.limit]
     cfg = CollatorConfig(max_length=model.config.max_length, num_slots=model.config.num_slots,
-                         head_type=model.config.head_type)
+                         head_type=model.config.head_type,
+                         state_mask=getattr(model.config, "state_mask", False))
     canonical = SystemOneCollator(model.tokenizer, cfg, train=False)
     reverse = _Reversed(model.tokenizer, cfg, train=False)
 
