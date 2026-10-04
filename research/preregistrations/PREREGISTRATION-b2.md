@@ -101,3 +101,68 @@ cost becomes the question: 4B+4B with no prefix cache, against e1b's cached enco
 - **Licence.** As b1: Gemma Terms of Use.
 
 ## Outcome (added after the run)
+
+Nothing above this section was edited after training. **By the rule fixed above, b2 does
+not become hobson-bidi's reference model.** Predictions 1, 3, 4 and 5 held. Prediction 2
+missed one floor of nine, generated v16's, by 0.006. Neither failure condition is met.
+**The capacity reading of b1 is supported:** the same recipe on the 4B+4B torso moved
+JevBench from 153 to 178.
+
+The run: commit `10f163c`, one g7e.2xlarge (RTX PRO 6000 Blackwell, 96 GB) in us-east-2,
+4 October 2026. `training/aws/image/setup-host.sh` installs torch 2.7.1+cu126, which has no
+sm_120 kernels, so every CUDA call failed. It was replaced by the same version's cu128
+build before anything ran; transformers 5.17.0 and peft 0.21.0 were unchanged. Training
+took 2 h 43 m (11:59 to 14:42 UTC), 3,738 steps at 0.38 to 0.40 steps/s. Peak allocation
+39.0 GiB (estimate 50 to 55), at most 41.3 GiB in use. Final validation loss / accuracy
+0.373 / 0.839, the lowest loss recorded on these rows (b1 0.407, v19 0.421, g4 0.427).
+Calibration temperatures: choice 1.192, yes/no 1.479, score 1.328. The checkpoint and
+reports are in `~/hobson-bidi/checkpoints/bidi-b2/` and `~/hobson-bidi/reports/b2/`, and in
+`s3://hobson-v17-195880352761-us-west-2/runs/b2/`.
+
+| | prediction | v19 | g4 | b1 | b2 | |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | JevBench >= 168 | 168 | 183 | 153 | **178** | pass |
+| 2 | nine floors within 0.02 of v19's rerun | | | | eight held; generated v16 0.831 against 0.837 | FAIL (one floor) |
+| 3 | HelpSteer2 adequate-class accuracy >= 0.60 | 0.684 | | 0.444 | **0.675** | pass |
+| 4 | order TV <= 0.044, flips below 0.156 | 0.088 / 0.156 | | 0.035 / 0.052 | **0.035 / 0.060** | pass |
+| 5 | JevBench ECE <= 0.07; held-out ECE <= 0.074 | 0.051; 0.054 | 0.048; 0.065 | 0.044; 0.065 | **0.062; 0.048** | pass |
+
+**JevBench: 178/231** (easy 48, standard 65, hard 65). Paired against b1: 38 gained, 13
+lost, **p = 0.0006**. Against the recorded v19 run (167 at 3,072): 25 gained, 14 lost,
+p = 0.11. Brier **0.287**, the best recorded here (g4 0.292, v19 0.342, b1 0.411).
+Paraphrase consistency 0.917. Latency on the RTX PRO 6000: median 95 ms, p95 214 ms,
+not comparable with the 3090 figures. Families at 1.0: adversarial, extraction, fact,
+intent, ordinal, routing, tool_selection. Weakest: temporal_numeric 0.33 (b1 0.20),
+multi_hop 0.44 (b1 0.33), adequacy 0.50 (b1 0.42), probability 0.50 (b1 0.40).
+
+**Sets** (floor in brackets):
+
+| set | v19 (rerun) | g4 | b1 | b2 | |
+| --- | --- | --- | --- | --- | --- |
+| held-out short tasks [0.627] | 0.647 | 0.655 | 0.671 | **0.685** | pass |
+| MuSiQue [0.862] | 0.882 | 0.902 | 0.923 | **0.950** | pass |
+| ContractNLI [0.853] | 0.873 | 0.861 | 0.843 | 0.860 | pass |
+| BoardgameQA [0.800] | 0.820 | 0.781 | 0.748 | **0.880** | pass |
+| HotpotQA, held out [0.699] | 0.719 | 0.759 | 0.605 | 0.748 | pass |
+| generated, v16's [0.837] | 0.857 | 0.863 | 0.797 | 0.831 | FAIL |
+| generated, v18's [0.757] | 0.777 | 0.794 | 0.741 | **0.818** | pass |
+| adequacy, HelpSteer2 [0.702] | 0.722 | 0.722 | 0.590 | **0.731** | pass |
+| adequacy, generated, balanced [0.768] | 0.788 | 0.801 | 0.693 | **0.816** | pass |
+
+The adequacy bias is gone. HelpSteer2 by gold label, inadequate / adequate: v19 0.761 /
+0.684, b1 0.735 / 0.444, b2 0.786 / 0.675. Generated: b2 0.773 / 0.860.
+
+**Order sensitivity** (3,000 held-out rows, reversed): TV 0.035, argmax flips 0.060 (choice
+0.039, yes/no 0.024). The bidirectional torso's order result holds at four times the size.
+
+**Reading.** b1's failure was capacity. With nothing changed but the torso, every
+reasoning and adequacy set that b1 lost came back to or above v19, and BoardgameQA (0.880),
+MuSiQue (0.950), HotpotQA (0.748) and both adequacy sets are the best recorded in any of
+these forks. JevBench rose 25 tasks over b1 and sits 11 above v19 and 5 below g4, inside
+the noise of g4 (about 4.5 tasks between runs). The miss on generated v16's set is 0.006,
+two rows of 350. Against g4, b2 trades JevBench count for calibration (Brier 0.287 against
+0.292) and order stability, with a larger torso (about 7.1B text parameters) and no
+prefix cache. That trade, and serving cost at 7B, are the next question, not torso capacity.
+
+Not tested here: latency on the 3090 (it fits for inference); a seed replicate; whether
+the generated-v16 miss is noise.
