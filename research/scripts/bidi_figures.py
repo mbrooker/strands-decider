@@ -26,12 +26,12 @@ import os
 import statistics
 from html import escape
 
-MODELS = [  # (name, torso, subtitle)
-    ("v19", "Qwen3.5-2B", "decoder"),
-    ("b1", "T5Gemma 2 1B+1B", "encoder-decoder"),
-    ("b2", "T5Gemma 2 4B+4B", "encoder-decoder"),
-    ("e1a", "T5Gemma 2B-it", "encoder"),
-    ("e1b", "T5Gemma 2B-it", "encoder + state cache"),
+MODELS = [  # (name, torso family, size and kind) - short enough for an 80 px slot
+    ("v19", "Qwen3.5", "2B decoder"),
+    ("b1", "T5Gemma 2", "1B+1B"),
+    ("b2", "T5Gemma 2", "4B+4B"),
+    ("e1a", "T5Gemma", "2B encoder"),
+    ("e1b", "T5Gemma", "2B enc + cache"),
 ]
 REFERENCE = "e1b"
 # Recorded JevBench outcomes (PREREGISTRATION-b1, -b2, -e1; v19 from the upstream record).
@@ -82,7 +82,10 @@ def five(values: list[float]) -> dict:
 
 def load_latency(reports: str) -> dict[str, dict[str, list[float]]]:
     def jev(path: str) -> list[float]:
-        return [r["latency_s"] * 1000 for r in map(json.loads, open(path, encoding="utf-8"))]
+        # The first request of every run is a cold start (kernel compilation; 0.6-7.7 s, each
+        # run's slowest): dropped, as the JF100 harness warms up before timing.
+        rows = sorted(map(json.loads, open(path, encoding="utf-8")), key=lambda r: r["ts"])
+        return [r["latency_s"] * 1000 for r in rows[1:]]
 
     def jf(path: str) -> list[float]:
         return [r["latency_ms"] for r in map(json.loads, open(path, encoding="utf-8"))]
@@ -107,7 +110,7 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
     stats = {b: {m: five(lat[b][m]) for m, _, _ in MODELS} for b in lat}
     lo = min(s["min"] for b in stats for s in stats[b].values())
     hi = max(s["max"] for b in stats for s in stats[b].values())
-    ylo = 10 ** math.floor(math.log10(lo * 0.9) * 2) / 10 ** 0 if False else lo * 0.85
+    ylo = lo * 0.85
     yhi = hi * 1.15
     ticks = [t for t in (10, 20, 50, 100, 200, 500, 1000, 2000, 5000) if ylo <= t <= yhi]
 
@@ -115,7 +118,7 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
         frac = (math.log10(v) - math.log10(ylo)) / (math.log10(yhi) - math.log10(ylo))
         return top + (H - top - bottom) * (1 - frac)
 
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'class="viz" role="img" aria-labelledby="t d">', STYLE,
              f'<title id="t">Request latency by model, JevBench and JF100</title>',
              '<desc id="d">Box plots of per-request latency in milliseconds on one RTX 3090, log scale, '
@@ -129,11 +132,10 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
     rows = []
     for p, bench in enumerate(("JevBench", "JF100")):
         x0 = left + p * (panel_w + gap)
-        n = stats[bench][MODELS[0][0]]["n"]
-        how = "231 tasks, served over HTTP" if bench == "JevBench" else "300 requests, in process"
-        parts.append(f'<text class="panel" x="{x0}" y="{top - 22}">{bench}</text>'
-                     f'<text class="sub" x="{x0 + (78 if bench == "JevBench" else 52)}" y="{top - 22}">'
-                     f'· {how}</text>')
+        how = ("230 tasks over HTTP, cold first request dropped" if bench == "JevBench"
+               else "300 requests, in process, warmed up")
+        parts.append(f'<text class="panel" x="{x0}" y="{top - 22}">{bench}'
+                     f'<tspan class="sub" dx="6">· {how}</tspan></text>')
         for t in ticks:
             parts.append(f'<line class="grid" x1="{x0}" x2="{x0 + panel_w}" y1="{y(t):.1f}" y2="{y(t):.1f}"/>'
                          f'<text class="tick" x="{x0 - 8}" y="{y(t) + 4:.1f}" text-anchor="end">{t:,}</text>')
@@ -170,8 +172,10 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
             rows.append({"benchmark": bench, "model": m, **{k: round(v, 1) for k, v in s.items()
                                                            if k not in ("outliers",)},
                          "outliers": len(s["outliers"])})
-    parts.append(f'<text class="note" x="{left - 40}" y="{H - 12}">e1b is hobson-bidi\'s reference. '
-                 'Numbers beside each box are medians, in ms.</text>')
+    parts.append(f'<text class="note" x="{left - 40}" y="{H - 26}">T5Gemma 2: encoder-decoder from Gemma 3. '
+                 'T5Gemma 2B: the encoder of T5Gemma 2B-it UL2 (Gemma 2), decoder dropped.</text>'
+                 f'<text class="note" x="{left - 40}" y="{H - 11}">e1b is hobson-bidi\'s reference. '
+                 'Numbers beside boxes are medians, in ms. Hover a box for its five-number summary.</text>')
     parts.append("</svg>")
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(parts) + "\n")
@@ -179,8 +183,8 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
 
 
 def scatter_svg(path: str) -> None:
-    W, H = 600, 430
-    left, right, top, bottom = 72, 28, 84, 64
+    W, H = 600, 446
+    left, right, top, bottom = 72, 28, 84, 80
     xs = [b for _, b in JEVBENCH.values()]
     ys = [a for a, _ in JEVBENCH.values()]
     xlo, xhi = 0.27, 0.43
@@ -193,7 +197,7 @@ def scatter_svg(path: str) -> None:
         return top + (H - top - bottom) * (1 - (v - ylo) / (yhi - ylo))
 
     assert xlo < min(xs) and max(xs) < xhi and ylo < min(ys) and max(ys) < yhi
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'class="viz" role="img" aria-labelledby="t d">', STYLE,
              '<title id="t">JevBench accuracy against Brier score</title>',
              '<desc id="d">' + escape("; ".join(
@@ -211,13 +215,15 @@ def scatter_svg(path: str) -> None:
                      f'<text class="tick" x="{x(t):.1f}" y="{H - bottom + 16}" text-anchor="middle">{t:.2f}</text>')
     parts.append(f'<line class="axis" x1="{left}" x2="{W - right}" y1="{H - bottom}" y2="{H - bottom}"/>'
                  f'<line class="axis" x1="{left}" x2="{left}" y1="{top}" y2="{H - bottom}"/>'
-                 f'<text class="sub" x="{(left + W - right) / 2}" y="{H - 22}" text-anchor="middle">'
+                 f'<text class="sub" x="{(left + W - right) / 2}" y="{H - 42}" text-anchor="middle">'
                  'Brier score (mean squared error of the predicted distribution; lower is better)</text>'
                  f'<text class="sub" transform="translate(20 {(top + H - bottom) / 2}) rotate(-90)" '
                  'text-anchor="middle">Tasks correct, of 231</text>')
-    offsets = {"v19": (10, 4, "start"), "b1": (-10, 4, "end"), "b2": (10, 4, "start"),
-               "e1a": (10, 4, "start"), "e1b": (10, -8, "start")}
-    torso = {m: t for m, t, _ in MODELS}
+    # (dx, dy of the name line, anchor); the value line sits 13 px below the name. e1a and
+    # b1 share a row, so e1a's label goes left and b1's above its point.
+    offsets = {"v19": (10, 4, "start"), "b1": (0, -22, "middle"), "b2": (10, 4, "start"),
+               "e1a": (-10, 4, "end"), "e1b": (15, -6, "start")}
+    torso = {m: f"{t} {k}" for m, t, k in MODELS}
     for m, (a, b) in JEVBENCH.items():
         cx, cy = x(b), y(a)
         dx, dy, anchor = offsets[m]
@@ -230,7 +236,7 @@ def scatter_svg(path: str) -> None:
                      f'text-anchor="{anchor}">{m}</text>'
                      f'<text class="val" x="{cx + dx:.1f}" y="{cy + dy + 13:.1f}" text-anchor="{anchor}">'
                      f'{a} · {b:.3f}</text></g>')
-    parts.append(f'<text class="note" x="24" y="{H - 4}">Each run\'s recorded result. e1a and b1 tie at 153; '
+    parts.append(f'<text class="note" x="24" y="{H - 14}">Each run\'s recorded result. e1a and b1 tie at 153; '
                  'e1b, ringed, is hobson-bidi\'s reference.</text>')
     parts.append("</svg>")
     with open(path, "w", encoding="utf-8", newline="\n") as fh:

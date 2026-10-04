@@ -1,0 +1,6 @@
+model,torso,correct_of_231,accuracy,brier
+v19,Qwen3.5,168,0.7273,0.342
+b1,T5Gemma 2,153,0.6623,0.411
+b2,T5Gemma 2,178,0.7706,0.287
+e1a,T5Gemma,153,0.6623,0.373
+e1b,T5Gemma,171,0.7403,0.372

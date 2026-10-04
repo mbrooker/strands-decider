@@ -1,0 +1,520 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" class="viz" role="img" aria-labelledby="t d">
+
+<style>
+  .viz { --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781; --grid:#e1e0d9;
+         --axis:#c3c2b7; --s1:#2a78d6; --s1-fill:rgba(42,120,214,0.16);
+         font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  @media (prefers-color-scheme: dark) {
+    .viz { --surface:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781; --grid:#2c2c2a;
+           --axis:#383835; --s1:#3987e5; --s1-fill:rgba(57,135,229,0.22); }
+  }
+  .bg { fill: var(--surface); }
+  .title { fill: var(--ink); font-size: 16px; font-weight: 600; }
+  .sub { fill: var(--ink2); font-size: 12px; }
+  .panel { fill: var(--ink); font-size: 13px; font-weight: 600; }
+  .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .name { fill: var(--ink); font-size: 12px; font-weight: 600; }
+  .name.ref { font-weight: 700; }
+  .torso { fill: var(--muted); font-size: 10px; }
+  .val { fill: var(--ink2); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+  .grid { stroke: var(--grid); stroke-width: 1; }
+  .axis { stroke: var(--axis); stroke-width: 1; }
+  .box { fill: var(--s1-fill); stroke: var(--s1); stroke-width: 1.5; }
+  .median { stroke: var(--ink); stroke-width: 2; }
+  .whisker { stroke: var(--s1); stroke-width: 1.5; }
+  .outlier { fill: var(--s1); fill-opacity: 0.45; }
+  .dot { fill: var(--s1); stroke: var(--surface); stroke-width: 2; }
+  .ring { fill: none; stroke: var(--s1); stroke-width: 1.5; }
+  .note { fill: var(--muted); font-size: 11px; }
+</style>
+
+<title id="t">Request latency by model, JevBench and JF100</title>
+<desc id="d">Box plots of per-request latency in milliseconds on one RTX 3090, log scale, for v19, b1, b2, e1a and e1b. JevBench v19 median 93 ms; JevBench b1 median 216 ms; JevBench b2 median 234 ms; JevBench e1a median 80 ms; JevBench e1b median 89 ms; JF100 v19 median 80 ms; JF100 b1 median 167 ms; JF100 b2 median 229 ms; JF100 e1a median 65 ms; JF100 e1b median 69 ms</desc>
+<rect class="bg" width="920" height="470"/>
+<text class="title" x="24" y="30">Request latency by model</text>
+<text class="sub" x="24" y="50">Per request, one RTX 3090 under WSL2, log scale. Box: quartiles · line: median · whiskers: 1.5 × IQR · dots: beyond.</text>
+<text class="panel" x="64" y="74">JevBench<tspan class="sub" dx="6">· 230 tasks over HTTP, cold first request dropped</tspan></text>
+<line class="grid" x1="64" x2="464" y1="317.4" y2="317.4"/><text class="tick" x="56" y="321.4" text-anchor="end">100</text>
+<line class="grid" x1="64" x2="464" y1="252.6" y2="252.6"/><text class="tick" x="56" y="256.6" text-anchor="end">200</text>
+<line class="grid" x1="64" x2="464" y1="167.0" y2="167.0"/><text class="tick" x="56" y="171.0" text-anchor="end">500</text>
+<line class="grid" x1="64" x2="464" y1="102.2" y2="102.2"/><text class="tick" x="56" y="106.2" text-anchor="end">1,000</text>
+<text class="tick" x="56" y="90" text-anchor="end">ms</text>
+<line class="axis" x1="64" x2="464" y1="378" y2="378"/>
+<g><title>v19 on JevBench (n=230): min 85, Q1 90, median 93, Q3 104, p95 282, max 437 ms</title>
+<rect x="74.0" y="298.6" width="60" height="37.6" fill="transparent"/>
+<line class="whisker" x1="104.0" x2="104.0" y1="302.6" y2="314.0"/>
+<line class="whisker" x1="104.0" x2="104.0" y1="326.8" y2="332.2"/>
+<line class="whisker" x1="97.0" x2="111.0" y1="302.6" y2="302.6"/>
+<line class="whisker" x1="97.0" x2="111.0" y1="332.2" y2="332.2"/>
+<rect class="box" x="89.0" y="314.0" width="30" height="12.8" rx="3"/>
+<line class="median" x1="89.0" x2="119.0" y1="324.2" y2="324.2"/>
+<circle class="outlier" cx="104.0" cy="290.0" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="286.7" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="284.0" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="281.7" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="246.8" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="239.6" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="237.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="235.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="234.6" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="234.2" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="234.0" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="233.8" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="233.5" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="232.8" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="231.7" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="231.0" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="225.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="225.1" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="223.3" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="222.6" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="222.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="222.2" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="221.5" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="221.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="221.0" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="220.9" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="220.5" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="220.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="220.3" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="219.6" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="217.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="216.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="210.3" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="209.4" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="207.5" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="207.3" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="205.6" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="205.2" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="201.1" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="199.8" r="2.4"/>
+<circle class="outlier" cx="104.0" cy="179.5" r="2.4"/>
+<text class="val" x="123.0" y="327.7">93</text></g>
+<text class="name" x="104.0" y="396" text-anchor="middle">v19</text><text class="torso" x="104.0" y="410" text-anchor="middle">Qwen3.5</text><text class="torso" x="104.0" y="422" text-anchor="middle">2B decoder</text>
+<g><title>b1 on JevBench (n=230): min 203, Q1 211, median 216, Q3 221, p95 344, max 552 ms</title>
+<rect x="154.0" y="234.4" width="60" height="20.9" fill="transparent"/>
+<line class="whisker" x1="184.0" x2="184.0" y1="238.4" y2="243.1"/>
+<line class="whisker" x1="184.0" x2="184.0" y1="247.7" y2="251.3"/>
+<line class="whisker" x1="177.0" x2="191.0" y1="238.4" y2="238.4"/>
+<line class="whisker" x1="177.0" x2="191.0" y1="251.3" y2="251.3"/>
+<rect class="box" x="169.0" y="243.1" width="30" height="4.6" rx="3"/>
+<line class="median" x1="169.0" x2="199.0" y1="245.6" y2="245.6"/>
+<circle class="outlier" cx="184.0" cy="235.7" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="235.6" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="224.9" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="223.3" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="218.5" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="217.4" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="216.2" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="215.7" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="214.7" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="213.7" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="213.4" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="212.6" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="212.6" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="212.4" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="211.6" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="211.5" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="211.2" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="211.0" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="209.9" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="209.3" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="208.2" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="207.0" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="206.7" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="205.8" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="204.8" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="203.2" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="201.9" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="201.3" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="200.6" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="196.1" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="194.3" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="194.2" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="193.8" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="193.7" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="192.6" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="191.5" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="188.8" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="187.1" r="2.4"/>
+<circle class="outlier" cx="184.0" cy="157.8" r="2.4"/>
+<text class="val" x="203.0" y="249.1">216</text></g>
+<text class="name" x="184.0" y="396" text-anchor="middle">b1</text><text class="torso" x="184.0" y="410" text-anchor="middle">T5Gemma 2</text><text class="torso" x="184.0" y="422" text-anchor="middle">1B+1B</text>
+<g><title>b2 on JevBench (n=230): min 216, Q1 228, median 234, Q3 255, p95 642, max 896 ms</title>
+<rect x="234.0" y="212.6" width="60" height="36.6" fill="transparent"/>
+<line class="whisker" x1="264.0" x2="264.0" y1="216.6" y2="230.0"/>
+<line class="whisker" x1="264.0" x2="264.0" y1="240.2" y2="245.2"/>
+<line class="whisker" x1="257.0" x2="271.0" y1="216.6" y2="216.6"/>
+<line class="whisker" x1="257.0" x2="271.0" y1="245.2" y2="245.2"/>
+<rect class="box" x="249.0" y="230.0" width="30" height="10.2" rx="3"/>
+<line class="median" x1="249.0" x2="279.0" y1="237.9" y2="237.9"/>
+<circle class="outlier" cx="264.0" cy="216.0" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="215.8" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="215.0" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="213.6" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="212.7" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="211.3" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="208.9" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="203.4" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="201.1" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="197.7" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="192.9" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="169.2" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="159.7" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="157.1" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="156.9" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="156.3" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="156.2" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="156.0" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="152.6" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="152.6" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="151.0" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="146.9" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="146.6" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="146.6" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="146.5" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.8" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.8" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.6" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.3" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.2" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.1" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.0" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="145.0" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="144.5" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="144.3" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="143.7" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="143.5" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="143.5" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="143.1" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="138.9" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="126.8" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="124.5" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="123.4" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="123.3" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="119.7" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="118.2" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="113.5" r="2.4"/>
+<circle class="outlier" cx="264.0" cy="112.5" r="2.4"/>
+<text class="val" x="283.0" y="241.4">234</text></g>
+<text class="name" x="264.0" y="396" text-anchor="middle">b2</text><text class="torso" x="264.0" y="410" text-anchor="middle">T5Gemma 2</text><text class="torso" x="264.0" y="422" text-anchor="middle">4B+4B</text>
+<g><title>e1a on JevBench (n=230): min 76, Q1 78, median 80, Q3 93, p95 347, max 513 ms</title>
+<rect x="314.0" y="309.7" width="60" height="37.8" fill="transparent"/>
+<line class="whisker" x1="344.0" x2="344.0" y1="313.7" y2="324.1"/>
+<line class="whisker" x1="344.0" x2="344.0" y1="340.5" y2="343.6"/>
+<line class="whisker" x1="337.0" x2="351.0" y1="313.7" y2="313.7"/>
+<line class="whisker" x1="337.0" x2="351.0" y1="343.6" y2="343.6"/>
+<rect class="box" x="329.0" y="324.1" width="30" height="16.5" rx="3"/>
+<line class="median" x1="329.0" x2="359.0" y1="338.4" y2="338.4"/>
+<circle class="outlier" cx="344.0" cy="301.3" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="300.6" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="298.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="298.2" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="297.5" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="293.6" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="291.2" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="290.2" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="290.2" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="288.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="274.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="274.5" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="266.9" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="231.2" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="223.6" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="216.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="216.5" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="216.1" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="215.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="215.5" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="215.4" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="213.4" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="212.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="212.3" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="206.1" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="205.9" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="205.8" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="205.8" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="205.3" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="205.0" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="204.9" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="204.6" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="204.6" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="204.5" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="203.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="203.4" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="202.1" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="201.0" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="201.0" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="200.8" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="200.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="196.4" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="188.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="186.2" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="186.0" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="185.4" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="183.7" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="176.6" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="176.3" r="2.4"/>
+<circle class="outlier" cx="344.0" cy="164.6" r="2.4"/>
+<text class="val" x="363.0" y="341.9">80</text></g>
+<text class="name" x="344.0" y="396" text-anchor="middle">e1a</text><text class="torso" x="344.0" y="410" text-anchor="middle">T5Gemma</text><text class="torso" x="344.0" y="422" text-anchor="middle">2B encoder</text>
+<g><title>e1b on JevBench (n=230): min 84, Q1 87, median 89, Q3 98, p95 387, max 608 ms</title>
+<rect x="394.0" y="304.8" width="60" height="32.6" fill="transparent"/>
+<line class="whisker" x1="424.0" x2="424.0" y1="308.8" y2="319.6"/>
+<line class="whisker" x1="424.0" x2="424.0" y1="330.2" y2="333.4"/>
+<line class="whisker" x1="417.0" x2="431.0" y1="308.8" y2="308.8"/>
+<line class="whisker" x1="417.0" x2="431.0" y1="333.4" y2="333.4"/>
+<rect class="box" x="409.0" y="319.6" width="30" height="10.7" rx="3"/>
+<line class="median" x1="409.0" x2="439.0" y1="328.4" y2="328.4"/>
+<circle class="outlier" cx="424.0" cy="305.4" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="295.0" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="294.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="294.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="293.9" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="290.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="290.2" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="286.0" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="284.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="282.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="278.0" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="265.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="264.0" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="261.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="222.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="213.1" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="206.4" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="206.4" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="206.3" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="206.1" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="205.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="204.8" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="202.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="201.9" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="199.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="195.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="195.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="194.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="194.3" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="194.2" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="194.1" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="193.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="193.1" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="193.1" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="192.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="191.8" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="191.2" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="190.8" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="190.8" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="190.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="190.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="190.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="185.8" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="175.7" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="174.3" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="173.6" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="172.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="170.0" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="164.1" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="162.5" r="2.4"/>
+<circle class="outlier" cx="424.0" cy="148.7" r="2.4"/>
+<text class="val" x="443.0" y="331.9">89</text></g>
+<text class="name ref" x="424.0" y="396" text-anchor="middle">e1b</text><text class="torso" x="424.0" y="410" text-anchor="middle">T5Gemma</text><text class="torso" x="424.0" y="422" text-anchor="middle">2B enc + cache</text>
+<text class="panel" x="520" y="74">JF100<tspan class="sub" dx="6">· 300 requests, in process, warmed up</tspan></text>
+<line class="grid" x1="520" x2="920" y1="317.4" y2="317.4"/><text class="tick" x="512" y="321.4" text-anchor="end">100</text>
+<line class="grid" x1="520" x2="920" y1="252.6" y2="252.6"/><text class="tick" x="512" y="256.6" text-anchor="end">200</text>
+<line class="grid" x1="520" x2="920" y1="167.0" y2="167.0"/><text class="tick" x="512" y="171.0" text-anchor="end">500</text>
+<line class="grid" x1="520" x2="920" y1="102.2" y2="102.2"/><text class="tick" x="512" y="106.2" text-anchor="end">1,000</text>
+<text class="tick" x="512" y="90" text-anchor="end">ms</text>
+<line class="axis" x1="520" x2="920" y1="378" y2="378"/>
+<g><title>v19 on JF100 (n=300): min 77, Q1 79, median 80, Q3 82, p95 264, max 370 ms</title>
+<rect x="530.0" y="328.8" width="60" height="17.5" fill="transparent"/>
+<line class="whisker" x1="560.0" x2="560.0" y1="332.8" y2="336.4"/>
+<line class="whisker" x1="560.0" x2="560.0" y1="339.4" y2="342.3"/>
+<line class="whisker" x1="553.0" x2="567.0" y1="332.8" y2="332.8"/>
+<line class="whisker" x1="553.0" x2="567.0" y1="342.3" y2="342.3"/>
+<rect class="box" x="545.0" y="336.4" width="30" height="3.0" rx="3"/>
+<line class="median" x1="545.0" x2="575.0" y1="338.1" y2="338.1"/>
+<circle class="outlier" cx="560.0" cy="331.8" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="329.7" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="329.2" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="318.9" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="283.7" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="283.5" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="282.6" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="282.3" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="281.9" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="281.7" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="227.2" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="227.2" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="226.6" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="226.3" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="224.9" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="224.1" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="201.2" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="200.2" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="199.7" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="199.1" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="197.8" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="197.8" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="197.7" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="197.5" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="197.2" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="197.0" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="196.8" r="2.4"/>
+<circle class="outlier" cx="560.0" cy="195.2" r="2.4"/>
+<text class="val" x="579.0" y="341.6">80</text></g>
+<text class="name" x="560.0" y="396" text-anchor="middle">v19</text><text class="torso" x="560.0" y="410" text-anchor="middle">Qwen3.5</text><text class="torso" x="560.0" y="422" text-anchor="middle">2B decoder</text>
+<g><title>b1 on JF100 (n=300): min 163, Q1 165, median 167, Q3 169, p95 279, max 368 ms</title>
+<rect x="610.0" y="261.8" width="60" height="13.9" fill="transparent"/>
+<line class="whisker" x1="640.0" x2="640.0" y1="265.8" y2="268.5"/>
+<line class="whisker" x1="640.0" x2="640.0" y1="270.4" y2="271.8"/>
+<line class="whisker" x1="633.0" x2="647.0" y1="265.8" y2="265.8"/>
+<line class="whisker" x1="633.0" x2="647.0" y1="271.8" y2="271.8"/>
+<rect class="box" x="625.0" y="268.5" width="30" height="2.0" rx="3"/>
+<line class="median" x1="625.0" x2="655.0" y1="269.7" y2="269.7"/>
+<circle class="outlier" cx="640.0" cy="265.6" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="265.3" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="264.7" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="261.9" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="254.4" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="253.4" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="253.4" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="253.3" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="252.8" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="252.8" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="229.5" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="221.7" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="221.7" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="221.6" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="221.3" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="220.7" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="219.9" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="200.0" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="199.8" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="199.8" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="199.7" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="199.6" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="198.5" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="198.0" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="197.8" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="197.3" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="197.0" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="196.1" r="2.4"/>
+<circle class="outlier" cx="640.0" cy="195.6" r="2.4"/>
+<text class="val" x="659.0" y="273.2">167</text></g>
+<text class="name" x="640.0" y="396" text-anchor="middle">b1</text><text class="torso" x="640.0" y="410" text-anchor="middle">T5Gemma 2</text><text class="torso" x="640.0" y="422" text-anchor="middle">1B+1B</text>
+<g><title>b2 on JF100 (n=300): min 220, Q1 227, median 229, Q3 231, p95 669, max 929 ms</title>
+<rect x="690.0" y="232.6" width="60" height="15.0" fill="transparent"/>
+<line class="whisker" x1="720.0" x2="720.0" y1="236.6" y2="239.0"/>
+<line class="whisker" x1="720.0" x2="720.0" y1="240.9" y2="243.6"/>
+<line class="whisker" x1="713.0" x2="727.0" y1="236.6" y2="236.6"/>
+<line class="whisker" x1="713.0" x2="727.0" y1="243.6" y2="243.6"/>
+<rect class="box" x="705.0" y="239.0" width="30" height="1.9" rx="3"/>
+<line class="median" x1="705.0" x2="735.0" y1="240.2" y2="240.2"/>
+<circle class="outlier" cx="720.0" cy="236.3" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="235.9" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="235.6" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="235.2" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="234.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="233.7" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="184.1" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="183.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="183.6" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="182.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="182.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="182.0" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="139.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="139.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="139.7" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="139.7" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="139.4" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="139.4" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="114.2" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="114.0" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="113.6" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="113.5" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="113.4" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="113.0" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="112.4" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="112.4" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="111.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="111.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="110.8" r="2.4"/>
+<circle class="outlier" cx="720.0" cy="109.1" r="2.4"/>
+<text class="val" x="739.0" y="243.7">229</text></g>
+<text class="name" x="720.0" y="396" text-anchor="middle">b2</text><text class="torso" x="720.0" y="410" text-anchor="middle">T5Gemma 2</text><text class="torso" x="720.0" y="422" text-anchor="middle">4B+4B</text>
+<g><title>e1a on JF100 (n=300): min 62, Q1 64, median 65, Q3 66, p95 333, max 530 ms</title>
+<rect x="770.0" y="345.7" width="60" height="21.1" fill="transparent"/>
+<line class="whisker" x1="800.0" x2="800.0" y1="349.7" y2="355.6"/>
+<line class="whisker" x1="800.0" x2="800.0" y1="359.7" y2="362.8"/>
+<line class="whisker" x1="793.0" x2="807.0" y1="349.7" y2="349.7"/>
+<line class="whisker" x1="793.0" x2="807.0" y1="362.8" y2="362.8"/>
+<rect class="box" x="785.0" y="355.6" width="30" height="4.2" rx="3"/>
+<line class="median" x1="785.0" x2="815.0" y1="358.1" y2="358.1"/>
+<circle class="outlier" cx="800.0" cy="348.4" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="346.8" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="345.9" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="345.7" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="260.1" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="260.0" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="259.8" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="257.0" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="255.7" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="255.3" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="205.1" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="205.1" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="205.1" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="205.0" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="204.9" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="203.7" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.8" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.7" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.6" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.5" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.5" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.5" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.4" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.4" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.4" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="168.1" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="167.3" r="2.4"/>
+<circle class="outlier" cx="800.0" cy="161.5" r="2.4"/>
+<text class="val" x="819.0" y="361.6">65</text></g>
+<text class="name" x="800.0" y="396" text-anchor="middle">e1a</text><text class="torso" x="800.0" y="410" text-anchor="middle">T5Gemma</text><text class="torso" x="800.0" y="422" text-anchor="middle">2B encoder</text>
+<g><title>e1b on JF100 (n=300): min 64, Q1 67, median 69, Q3 71, p95 374, max 558 ms</title>
+<rect x="850.0" y="339.4" width="60" height="24.0" fill="transparent"/>
+<line class="whisker" x1="880.0" x2="880.0" y1="343.4" y2="349.0"/>
+<line class="whisker" x1="880.0" x2="880.0" y1="354.2" y2="359.4"/>
+<line class="whisker" x1="873.0" x2="887.0" y1="343.4" y2="343.4"/>
+<line class="whisker" x1="873.0" x2="887.0" y1="359.4" y2="359.4"/>
+<rect class="box" x="865.0" y="349.0" width="30" height="5.3" rx="3"/>
+<line class="median" x1="865.0" x2="895.0" y1="352.1" y2="352.1"/>
+<circle class="outlier" cx="880.0" cy="341.0" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="254.7" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="254.3" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="254.0" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="253.9" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="253.6" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="251.5" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="194.9" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="194.5" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="194.2" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="194.1" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="193.7" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="193.7" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="163.3" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="163.3" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="163.2" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="162.3" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="162.3" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="162.0" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="160.7" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="160.5" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="158.9" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="157.2" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="156.9" r="2.4"/>
+<circle class="outlier" cx="880.0" cy="156.7" r="2.4"/>
+<text class="val" x="899.0" y="355.6">69</text></g>
+<text class="name ref" x="880.0" y="396" text-anchor="middle">e1b</text><text class="torso" x="880.0" y="410" text-anchor="middle">T5Gemma</text><text class="torso" x="880.0" y="422" text-anchor="middle">2B enc + cache</text>
+<text class="note" x="24" y="444">T5Gemma 2: encoder-decoder from Gemma 3. T5Gemma 2B: the encoder of T5Gemma 2B-it UL2 (Gemma 2), decoder dropped.</text><text class="note" x="24" y="459">e1b is hobson-bidi's reference. Numbers beside boxes are medians, in ms. Hover a box for its five-number summary.</text>
+</svg>
