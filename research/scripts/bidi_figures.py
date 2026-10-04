@@ -1,4 +1,4 @@
-"""Two figures for hobson-bidi: latency by model (box plots) and JevBench accuracy against Brier.
+"""Two figures for hobson-bidi: latency by model (box plots) and accuracy against Brier.
 
     python research/scripts/bidi_figures.py --reports ~/hobson-bidi/reports --out research/figures
 
@@ -10,7 +10,9 @@ first request), all in reports/latency_compiled/:
 - JF100, from `research/scripts/jf100_latency.py --compile` (300 requests through the engine,
   in process).
 
-Accuracy and Brier are each run's recorded JevBench result (the preregistrations' outcomes).
+Accuracy against Brier, two panels: JevBench, each run's recorded result (the preregistrations'
+outcomes); JF100, from each checkpoint's predictions (eval_jf100.py, uncompiled; JF100_PREDS),
+Brier as JevBench defines it.
 
 Static SVG, no script: light and dark from CSS custom properties under
 prefers-color-scheme; one series colour (palette slot 1, validated on both surfaces);
@@ -187,62 +189,100 @@ def latency_svg(lat: dict, path: str) -> list[dict]:
     return rows
 
 
-def scatter_svg(path: str) -> None:
-    W, H = 600, 446
-    left, right, top, bottom = 72, 28, 84, 80
-    xs = [b for _, b in JEVBENCH.values()]
-    ys = [a for a, _ in JEVBENCH.values()]
-    xlo, xhi = 0.27, 0.43
-    ylo, yhi = 148, 182
+# JF100 predictions, one row per decision with the full A-D distribution: written by
+# ~/sd_eval/run/eval_jf100.py, uncompiled, one file per checkpoint (paths under --reports).
+JF100_PREDS = {"v19": "v19/jf100_v19.jsonl", "b1": "e1a/jf100_b1.jsonl", "b2": "b2/jf100_b2.jsonl",
+               "e1a": "e1a/jf100_e1a.jsonl", "e1b": "e1b/jf100_e1b.jsonl"}
 
-    def x(v: float) -> float:
-        return left + (W - left - right) * (v - xlo) / (xhi - xlo)
 
-    def y(v: float) -> float:
-        return top + (H - top - bottom) * (1 - (v - ylo) / (yhi - ylo))
+def load_jf100(reports: str) -> dict[str, tuple[int, float]]:
+    """(decisions correct of 300, Brier) per model. Brier as JevBench defines it
+    (jevbench/metrics.py): the multi-class sum over the options, sum_k (p_k - y_k)^2."""
+    out = {}
+    for m, rel in JF100_PREDS.items():
+        rows = [json.loads(line) for line in open(os.path.join(reports, rel), encoding="utf-8")]
+        assert len(rows) == 300 and all(len(r["probabilities"]) == 4 for r in rows), rel
+        brier = sum(sum((p - (k == r["gold"])) ** 2 for k, p in r["probabilities"].items())
+                    for r in rows) / len(rows)
+        out[m] = (sum(r["correct"] for r in rows), round(brier, 3))
+    return out
 
-    assert xlo < min(xs) and max(xs) < xhi and ylo < min(ys) and max(ys) < yhi
+
+# (dx, dy of the name line, anchor) per panel; the value line sits 13 px below the name.
+SCATTER_LABELS = {
+    "JevBench": {"v19": (10, 4, "start"), "b1": (0, -22, "middle"), "b2": (10, 4, "start"),
+                 "e1a": (-10, 4, "end"), "e1b": (15, -6, "start")},
+    "JF100": {"v19": (10, 4, "start"), "b1": (10, 4, "start"), "b2": (10, 4, "start"),
+              "e1a": (-10, 0, "end"), "e1b": (15, 8, "start")},
+}
+
+
+def scatter_svg(path: str, jf100: dict[str, tuple[int, float]]) -> None:
+    """Accuracy against Brier, JevBench above JF100, each panel on its own axes."""
+    W, left, right = 600, 72, 28
+    first_top, plot_h, step = 100, 250, 364
+    panels = [("JevBench", 231, "231 public tasks, each run's recorded result", "Tasks correct, of 231", JEVBENCH),
+              ("JF100", 300, "100 items × 3 option rotations, uncompiled", "Decisions correct, of 300", jf100)]
+    H = first_top + step + plot_h + 96
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'class="viz" role="img" aria-labelledby="t d">', STYLE,
-             '<title id="t">JevBench accuracy against Brier score</title>',
+             '<title id="t">Accuracy against Brier score, JevBench and JF100</title>',
              '<desc id="d">' + escape("; ".join(
-                 f"{m}: {a} of 231 tasks ({a / 231:.1%}), Brier {b:.3f}" for m, (a, b) in JEVBENCH.items()))
-             + '</desc>',
+                 f"{bench} {m}: {a} of {n} ({a / n:.1%}), Brier {b:.3f}"
+                 for bench, n, _, _, data in panels for m, (a, b) in data.items())) + '</desc>',
              f'<rect class="bg" width="{W}" height="{H}"/>',
-             f'<text class="title" x="24" y="30">JevBench: accuracy against Brier score</text>',
-             '<text class="sub" x="24" y="50">231 public tasks. Better is up and to the left '
-             '(more correct, lower Brier).</text>']
-    for t in range(150, 183, 5):
-        parts.append(f'<line class="grid" x1="{left}" x2="{W - right}" y1="{y(t):.1f}" y2="{y(t):.1f}"/>'
-                     f'<text class="tick" x="{left - 8}" y="{y(t) + 4:.1f}" text-anchor="end">{t}</text>')
-    for t in (0.28, 0.30, 0.32, 0.34, 0.36, 0.38, 0.40, 0.42):
-        parts.append(f'<line class="grid" x1="{x(t):.1f}" x2="{x(t):.1f}" y1="{top}" y2="{H - bottom}"/>'
-                     f'<text class="tick" x="{x(t):.1f}" y="{H - bottom + 16}" text-anchor="middle">{t:.2f}</text>')
-    parts.append(f'<line class="axis" x1="{left}" x2="{W - right}" y1="{H - bottom}" y2="{H - bottom}"/>'
-                 f'<line class="axis" x1="{left}" x2="{left}" y1="{top}" y2="{H - bottom}"/>'
-                 f'<text class="sub" x="{(left + W - right) / 2}" y="{H - 42}" text-anchor="middle">'
-                 'Brier score (mean squared error of the predicted distribution; lower is better)</text>'
-                 f'<text class="sub" transform="translate(20 {(top + H - bottom) / 2}) rotate(-90)" '
-                 'text-anchor="middle">Tasks correct, of 231</text>')
-    # (dx, dy of the name line, anchor); the value line sits 13 px below the name. e1a and
-    # b1 share a row, so e1a's label goes left and b1's above its point.
-    offsets = {"v19": (10, 4, "start"), "b1": (0, -22, "middle"), "b2": (10, 4, "start"),
-               "e1a": (-10, 4, "end"), "e1b": (15, -6, "start")}
+             '<text class="title" x="24" y="30">Accuracy against Brier score</text>',
+             '<text class="sub" x="24" y="50">Better is up and to the left (more correct, lower Brier). '
+             'Each panel on its own axes.</text>']
     torso = {m: f"{t} {k}" for m, t, k in MODELS}
-    for m, (a, b) in JEVBENCH.items():
-        cx, cy = x(b), y(a)
-        dx, dy, anchor = offsets[m]
-        tip = escape(f"{m} ({torso[m]}): {a}/231 correct ({a / 231:.1%}), Brier {b:.3f}")
-        ref = m == REFERENCE
-        parts.append(f'<g><title>{tip}</title><circle cx="{cx:.1f}" cy="{cy:.1f}" r="14" fill="transparent"/>'
-                     + (f'<circle class="ring" cx="{cx:.1f}" cy="{cy:.1f}" r="10"/>' if ref else "")
-                     + f'<circle class="dot" cx="{cx:.1f}" cy="{cy:.1f}" r="6"/>'
-                     f'<text class="name{" ref" if ref else ""}" x="{cx + dx:.1f}" y="{cy + dy:.1f}" '
-                     f'text-anchor="{anchor}">{m}</text>'
-                     f'<text class="val" x="{cx + dx:.1f}" y="{cy + dy + 13:.1f}" text-anchor="{anchor}">'
-                     f'{a} · {b:.3f}</text></g>')
-    parts.append(f'<text class="note" x="24" y="{H - 14}">Each run\'s recorded result. e1a and b1 tie at 153; '
-                 'e1b, ringed, is hobson-bidi\'s reference.</text>')
+    for p, (bench, n, how, ylabel, data) in enumerate(panels):
+        top = first_top + p * step
+        base = top + plot_h
+        xs, ys = [b for _, b in data.values()], [a for a, _ in data.values()]
+        xstep = 0.02 if max(xs) - min(xs) > 0.06 else 0.01
+        xlo = math.floor((min(xs) - 0.012) / xstep) * xstep
+        xhi = math.ceil((max(xs) + 0.012) / xstep) * xstep
+        ystep = 5 if max(ys) - min(ys) <= 40 else 10
+        ylo = math.floor((min(ys) - 4) / ystep) * ystep
+        yhi = math.ceil((max(ys) + 4) / ystep) * ystep
+
+        def x(v: float, xlo: float = xlo, xhi: float = xhi) -> float:
+            return left + (W - left - right) * (v - xlo) / (xhi - xlo)
+
+        def y(v: float, ylo: float = ylo, yhi: float = yhi, top: float = top) -> float:
+            return top + plot_h * (1 - (v - ylo) / (yhi - ylo))
+
+        parts.append(f'<text class="panel" x="{left}" y="{top - 16}">{bench}'
+                     f'<tspan class="sub" dx="6">· {escape(how)}</tspan></text>')
+        for t in range(ylo, yhi + 1, ystep):
+            parts.append(f'<line class="grid" x1="{left}" x2="{W - right}" y1="{y(t):.1f}" y2="{y(t):.1f}"/>'
+                         f'<text class="tick" x="{left - 8}" y="{y(t) + 4:.1f}" text-anchor="end">{t}</text>')
+        for i in range(round((xhi - xlo) / xstep) + 1):
+            t = xlo + i * xstep
+            parts.append(f'<line class="grid" x1="{x(t):.1f}" x2="{x(t):.1f}" y1="{top}" y2="{base}"/>'
+                         f'<text class="tick" x="{x(t):.1f}" y="{base + 16}" text-anchor="middle">{t:.2f}</text>')
+        parts.append(f'<line class="axis" x1="{left}" x2="{W - right}" y1="{base}" y2="{base}"/>'
+                     f'<line class="axis" x1="{left}" x2="{left}" y1="{top}" y2="{base}"/>'
+                     f'<text class="sub" x="{(left + W - right) / 2}" y="{base + 38}" text-anchor="middle">'
+                     'Brier score (lower is better)</text>'
+                     f'<text class="sub" transform="translate(20 {top + plot_h / 2}) rotate(-90)" '
+                     f'text-anchor="middle">{ylabel}</text>')
+        for m, (a, b) in data.items():
+            cx, cy = x(b), y(a)
+            dx, dy, anchor = SCATTER_LABELS[bench][m]
+            tip = escape(f"{m} ({torso[m]}) on {bench}: {a}/{n} correct ({a / n:.1%}), Brier {b:.3f}")
+            ref = m == REFERENCE
+            parts.append(f'<g><title>{tip}</title><circle cx="{cx:.1f}" cy="{cy:.1f}" r="14" fill="transparent"/>'
+                         + (f'<circle class="ring" cx="{cx:.1f}" cy="{cy:.1f}" r="10"/>' if ref else "")
+                         + f'<circle class="dot" cx="{cx:.1f}" cy="{cy:.1f}" r="6"/>'
+                         f'<text class="name{" ref" if ref else ""}" x="{cx + dx:.1f}" y="{cy + dy:.1f}" '
+                         f'text-anchor="{anchor}">{m}</text>'
+                         f'<text class="val" x="{cx + dx:.1f}" y="{cy + dy + 13:.1f}" text-anchor="{anchor}">'
+                         f'{a} · {b:.3f}</text></g>')
+    parts.append(f'<text class="note" x="24" y="{H - 28}">Brier as JevBench defines it: the sum over the '
+                 'options of (p − y)², averaged over decisions.</text>'
+                 f'<text class="note" x="24" y="{H - 13}">e1b, ringed, is hobson-bidi\'s reference. '
+                 'JevBench: e1a and b1 tie at 153.</text>')
     parts.append("</svg>")
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(parts) + "\n")
@@ -259,13 +299,15 @@ def main() -> None:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
-    scatter_svg(os.path.join(args.out, "bidi_jevbench_accuracy_brier.svg"))
+    jf100 = load_jf100(args.reports)
+    scatter_svg(os.path.join(args.out, "bidi_jevbench_accuracy_brier.svg"), jf100)
     with open(os.path.join(args.out, "bidi_jevbench_accuracy_brier.csv"), "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["model", "torso", "correct_of_231", "accuracy", "brier"])
-        for m, t, _ in MODELS:
-            a, b = JEVBENCH[m]
-            w.writerow([m, t, a, round(a / 231, 4), b])
+        w.writerow(["benchmark", "model", "torso", "correct", "of", "accuracy", "brier"])
+        for bench, n, data in (("JevBench", 231, JEVBENCH), ("JF100", 300, jf100)):
+            for m, t, _ in MODELS:
+                a, b = data[m]
+                w.writerow([bench, m, t, a, n, round(a / n, 4), b])
     for r in rows:
         print(f"{r['benchmark']:9} {r['model']:4} median {r['median']:7.1f}  p95 {r['p95']:7.1f}  n {r['n']}")
 
