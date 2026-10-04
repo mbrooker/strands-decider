@@ -153,3 +153,82 @@ reserved down to the allocation peak (3.38 against 4.64 GiB on a mixed-size test
 changes memory placement only, not the computation, so nothing above changes.
 
 ## Outcome (added after the run)
+
+Nothing above this section was edited after training, except the Restart section, which
+was added before the run that counts. **By the rule fixed above, b1 does not become
+hobson-bidi's reference model.** Predictions 1, 3 and 5 failed, and the failure condition
+"JevBench under 179" is met. Predictions 2 and 4 held.
+
+The run: commit `b0c27d6`, RTX 3090 under WSL2, 3 October 2026. Training took 3 h
+(20:16 to 23:15 UTC), 3,738 steps at 0.35 steps/s. Peak allocation 16.5 GiB, at most
+19.7 GiB in use on the card, no spill. Final validation loss / accuracy 0.407 / 0.824
+(g4 0.427 / 0.810, v19 0.421 / 0.843; the same rows). Calibration temperatures: choice
+1.070, yes/no 1.401, score 0.659. Outputs are in `~/hobson-bidi/reports/b1/`.
+
+| | prediction | v19 | g4 | b1 | |
+| --- | --- | --- | --- | --- | --- |
+| 1 | JevBench >= 179 | 168 | 183 | **153** | FAIL |
+| 2 | order TV <= 0.044 and fewer flips than v19 | 0.088 / 0.156 | | **0.035 / 0.052** | pass |
+| 3 | nine floors within 0.02 of g4 | | | three held, six below | FAIL |
+| 4 | JevBench ECE <= 0.07; held-out ECE <= 0.074 | 0.051; 0.054 | 0.048; 0.065 | **0.044**; 0.065 | pass |
+| 5 | JevBench median < 115 ms, p95 <= 600 ms | 115 / 299 ms | | **216** / 348 ms | FAIL |
+
+**JevBench: 153/231** (easy 48, standard 57, hard 48). Paired against the recorded v19 run
+(167 at 3,072): 16 gained, 30 lost, p = 0.054. Brier 0.411 (v19 0.342, g4 0.292), ECE
+0.044, paraphrase consistency 0.861. Families at 1.0: extraction, fact, routing,
+tool_selection. Families at or below 0.42: temporal_numeric 0.20, ambiguous 0.29,
+multi_hop 0.33, judge_hard 0.35, probability 0.40, adequacy 0.42.
+
+**Sets** (floor in brackets; v19 rerun on the same card alongside, `multistep_eval --out`):
+
+| set | v19 (rerun) | g4 | b1 | |
+| --- | --- | --- | --- | --- |
+| held-out short tasks [0.635] | 0.647 (recorded) | 0.655 | **0.671** | pass |
+| MuSiQue [0.882] | 0.882 | 0.902 | **0.923** | pass |
+| ContractNLI [0.841] | 0.873 | 0.861 | 0.843 | pass |
+| BoardgameQA [0.761] | 0.820 | 0.781 | 0.748 | FAIL |
+| HotpotQA, held out [0.739] | 0.719 | 0.759 | **0.605** | FAIL |
+| generated, v16's [0.843] | 0.857 | 0.863 | 0.797 | FAIL |
+| generated, v18's [0.774] | 0.777 | 0.794 | 0.741 | FAIL |
+| adequacy, HelpSteer2 [0.702] | 0.722 | 0.722 | **0.590** | FAIL |
+| adequacy, generated, balanced [0.781] | 0.788 | 0.801 | 0.693 | FAIL |
+
+The v19 reruns reproduce its recorded figures to within about 0.01, the balanced
+adequacy exactly (0.788).
+
+**Latency** (`evaluation/bench_local.py`, CUDA, median): one question at 256 / 1,024 /
+2,048 / 4,000 state tokens, b1 197 / 207 / 271 / 406 ms against v19 102 / 133 / 209 /
+395 ms. Eight questions on a 4,000-token state: b1 2,317 ms (every question re-encodes
+the state), v19 500 ms with its prefix cache. b1 is slower at every size. At short
+lengths that looks like per-layer launch overhead in uncompiled serving across 52
+layers; serving was not compiled.
+
+**Diagnostics (exploratory, run after the predictions were scored).**
+`research/scripts/b1_by_length.py`, per-row correctness of b1 and v19 on the same rows:
+
+- *Length is not the cause.* b1's deficit does not grow with prompt length. On the
+  multi-step sets by length quartile: -0.085, -0.074, -0.014, +0.020, so b1 is ahead
+  on the longest quarter. On HelpSteer2 the shortest quarter is the worst (-0.224). The
+  design's suspect, the encoder's local window (about +-256 tokens in 22 of 26 layers),
+  is not supported.
+- *Adequacy fails on one side.* By gold label, inadequate / adequate: HelpSteer2 v19
+  0.761 / 0.684, b1 0.735 / **0.444**; generated v19 0.856 / 0.719, b1 0.823 / **0.562**.
+  b1 says "not adequate" to adequate answers. The per-kind temperatures cannot correct a
+  bias of this kind.
+
+**Reading.** The bidirectional encoder did what the architecture argument said: order
+dependence fell to two-fifths of v19's (argmax flips 15.6% to 5.2%, score rows 30.8% to
+9.0%), and calibration is the best in the series. Short classification is better too:
+held-out tasks 0.671, the highest recorded, and routing, intent, extraction and tool
+selection on JevBench are at or near ceiling. What failed is judgement and reasoning:
+multi-hop, temporal and numeric, adequacy and rule application, at every length. Phase 0
+predicted the swap from frozen features on short held-out classification, exactly the
+distribution where b1 won. It never measured the reasoning families where b1 lost.
+The probe answered a narrower question than the one this run asked. The most economical
+reading is torso capacity: T5Gemma 2 1B+1B is adapted from Gemma 3 1B, smaller and weaker
+at reasoning than either Qwen3.5-2B or Gemma 4 E2B, and a bidirectional encoder does not
+add reasoning the base lacks. That is a reading, not a measurement. The test is the
+4B+4B torso on the same recipe, which would separate the architecture from the size.
+
+Not tested here: whether compiled serving closes the latency gap, and whether a yes/no
+prior correction recovers adequacy.
