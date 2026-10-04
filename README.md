@@ -23,17 +23,6 @@
 
 <hr>
 
-> **This fork, hobson-bidi,** tries bidirectional torsos in place of the causal LLM.
-> **b1**, a T5Gemma 2 1B+1B encoder-decoder trained on the hobson-gemma4 fork's g4 recipe,
-> failed its preregistration: JevBench 153/231, against v19's 168 and g4's 183. It
-> cut order sensitivity to 0.035 from v19's 0.088, with argmax flips under option reversal
-> falling from 15.6% to 5.2%. Its JevBench ECE, 0.044, is the best recorded. But it lost on
-> reasoning and adequacy, and it is slower to serve. The reference model below is still
-> upstream's v19. The design is in [docs/bidi-design.md](docs/bidi-design.md) and the
-> outcome in
-> [research/preregistrations/PREREGISTRATION-b1.md](research/preregistrations/PREREGISTRATION-b1.md).
-> T5Gemma 2 weights are under the Gemma Terms of Use; the code stays Apache-2.0.
-
 Strands decider is one of a new class of **decision models**, or "system one" models. Unlike an
 LLM, which can generate arbitrary text, a decision model picks between sets of options and
 rates things on a scale. This class of model works best for problems that fall between LLMs
